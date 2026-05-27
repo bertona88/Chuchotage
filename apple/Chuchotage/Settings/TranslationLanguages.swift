@@ -14,7 +14,6 @@ struct TranslationLanguage: Identifiable, Equatable, Sendable {
 
 enum TranslationLanguages {
     static let fallbackTargetLanguageCode = "en"
-    static let fallbackConversationPartnerLanguageCode = "it"
     static var defaultTargetLanguageCode: String {
         preferredSupportedLanguageCode(from: Locale.preferredLanguages) ?? fallbackTargetLanguageCode
     }
@@ -42,13 +41,6 @@ enum TranslationLanguages {
 
     static func sanitizeOutputLanguageCode(_ code: String?) -> String {
         outputLanguage(for: code).code
-    }
-
-    static func defaultConversationPartnerLanguageCode(for localLanguageCode: String?) -> String {
-        let localLanguageCode = sanitizeOutputLanguageCode(localLanguageCode)
-        return localLanguageCode == fallbackTargetLanguageCode
-            ? fallbackConversationPartnerLanguageCode
-            : fallbackTargetLanguageCode
     }
 
     static func preferredSupportedLanguageCode(from preferredLanguages: [String]) -> String? {

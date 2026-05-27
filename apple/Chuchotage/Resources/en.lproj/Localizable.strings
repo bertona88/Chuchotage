@@ -55,14 +55,6 @@
 "credential.updateInProgress.detail" = "Waiting for the browser sign-in, Codex import, or Keychain update to finish.";
 "credential.useAPIKey" = "Use an OpenAI API key";
 "credential.useCodexLogin" = "Use Codex login";
-"conversation.chooseLanguages" = "Choose two different languages.";
-"conversation.localLabel" = "This side";
-"conversation.partnerLabel" = "Other side";
-"conversation.reading" = "Translation arrives here";
-"conversation.routeLabel" = "%@ -> %@";
-"conversation.speaking" = "Speaking into the mic";
-"conversation.tapToSpeak" = "Tap your side when you speak";
-"conversation.waiting" = "Translated text appears here.";
 "error.appleAudioNotWired" = "Apple audio capture and playback are not wired yet.";
 "error.audioEngineStartUnavailable" = "Chuchotage could not start live audio. Check microphone access and try again.";
 "error.audioInterrupted" = "Audio was interrupted by another app or call. Start translation again when your audio route is available.";
@@ -102,9 +94,6 @@
 "error.unsupportedCaptureFormat" = "The current audio capture format is not supported for translation.";
 "error.validOpenAICredential" = "Enter a valid OpenAI credential.";
 "header.translateTo" = "Translate to %@";
-"home.mode.conversation" = "Conversation";
-"home.mode.translate" = "Translate";
-"home.outputLanguage" = "Translate to %@";
 "mix.percentTranslated" = "%d%% translated";
 "network.reachChuchotage" = "Could not reach chuchotage.ai. Check the phone's network and try again.";
 "network.reachOpenAI" = "Could not reach api.openai.com. Check the network and try again.";
