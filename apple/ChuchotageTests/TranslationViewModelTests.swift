@@ -84,6 +84,66 @@ final class TranslationViewModelTests: XCTestCase {
         await runtime.stop()
     }
 
+    func testHomeTargetLanguageChangeRestartsActiveSession() async throws {
+        let credentialStore = InMemoryCredentialStore(
+            initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
+        )
+        let realtimeClient = ViewModelFakeRealtimeTranslationClient()
+        let runtime = TranslationRuntime(
+            credentialStore: credentialStore,
+            audioIO: ViewModelFakeTranslationAudioIO(),
+            realtimeClient: realtimeClient
+        )
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(
+                settings: TranslationSettings(targetLanguageCode: "en")
+            ),
+            credentialStore: credentialStore,
+            runtime: runtime
+        )
+
+        viewModel.toggleTranslation()
+        try await waitForConnectionCount(1, on: realtimeClient)
+        viewModel.changeTargetLanguageFromHome(to: "ja")
+
+        try await waitForConnectionCount(2, on: realtimeClient)
+        let targetLanguageCodes = await realtimeClient.connectedTargetLanguageCodes()
+        XCTAssertEqual(targetLanguageCodes, ["en", "ja"])
+        await runtime.stop()
+    }
+
+    func testConversationTurnStartsTowardTheOtherSideAndCanSwitchDirection() async throws {
+        let credentialStore = InMemoryCredentialStore(
+            initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
+        )
+        let realtimeClient = ViewModelFakeRealtimeTranslationClient()
+        let runtime = TranslationRuntime(
+            credentialStore: credentialStore,
+            audioIO: ViewModelFakeTranslationAudioIO(),
+            realtimeClient: realtimeClient
+        )
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(
+                settings: TranslationSettings(
+                    targetLanguageCode: "en",
+                    conversationLocalLanguageCode: "it",
+                    conversationPartnerLanguageCode: "en"
+                )
+            ),
+            credentialStore: credentialStore,
+            runtime: runtime
+        )
+
+        viewModel.startConversationTurn(.local)
+        try await waitForConnectionCount(1, on: realtimeClient)
+        viewModel.startConversationTurn(.partner)
+
+        try await waitForConnectionCount(2, on: realtimeClient)
+        let targetLanguageCodes = await realtimeClient.connectedTargetLanguageCodes()
+        XCTAssertEqual(targetLanguageCodes, ["en", "it"])
+        await runtime.stop()
+    }
+
     func testRuntimeErrorUpdatesErrorMessage() async throws {
         let credentialStore = InMemoryCredentialStore(
             initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
@@ -229,6 +289,20 @@ final class TranslationViewModelTests: XCTestCase {
             try await Task.sleep(nanoseconds: 25_000_000)
         }
     }
+
+    private func waitForConnectionCount(
+        _ expectedCount: Int,
+        on realtimeClient: ViewModelFakeRealtimeTranslationClient
+    ) async throws {
+        let timeout = Date().addingTimeInterval(1.5)
+        while await realtimeClient.connectedTargetLanguageCodes().count < expectedCount {
+            if Date() > timeout {
+                XCTFail("Timed out waiting for \(expectedCount) Realtime connection(s).")
+                return
+            }
+            try await Task.sleep(nanoseconds: 25_000_000)
+        }
+    }
 }
 
 private final class StatusOnlyCredentialStore: OpenAICredentialStoring, @unchecked Sendable {
@@ -346,6 +420,7 @@ private final class ViewModelFakeTranslationAudioIO: TranslationAudioIO, @unchec
 
 private actor ViewModelFakeRealtimeTranslationClient: RealtimeTranslationClienting {
     private var continuation: AsyncStream<RealtimeTranslationEvent>.Continuation?
+    private var targetLanguageCodes: [String] = []
 
     func connect(
         bearerToken: RealtimeTranslationSessionToken,
@@ -353,6 +428,7 @@ private actor ViewModelFakeRealtimeTranslationClient: RealtimeTranslationClienti
     ) async throws -> AsyncStream<RealtimeTranslationEvent> {
         let streamPair = AsyncStream.makeStream(of: RealtimeTranslationEvent.self)
         continuation = streamPair.continuation
+        targetLanguageCodes.append(targetLanguageCode)
         return streamPair.stream
     }
 
@@ -365,5 +441,9 @@ private actor ViewModelFakeRealtimeTranslationClient: RealtimeTranslationClienti
 
     func emit(_ event: RealtimeTranslationEvent) {
         continuation?.yield(event)
+    }
+
+    func connectedTargetLanguageCodes() -> [String] {
+        targetLanguageCodes
     }
 }

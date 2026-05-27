@@ -93,6 +93,8 @@ final class RealtimeTranslationSharedTests: XCTestCase {
     func testLanguageSanitizationMatchesAndroidAndWindowsList() {
         XCTAssertEqual(TranslationLanguages.sanitizeOutputLanguageCode("de"), "de")
         XCTAssertEqual(TranslationLanguages.sanitizeOutputLanguageCode("not-supported"), "en")
+        XCTAssertEqual(TranslationLanguages.defaultConversationPartnerLanguageCode(for: "en"), "it")
+        XCTAssertEqual(TranslationLanguages.defaultConversationPartnerLanguageCode(for: "de"), "en")
         XCTAssertEqual(TranslationLanguages.supportedOutputLanguages.map(\.code), [
             "es", "pt", "fr", "ja", "ru", "zh", "de", "ko", "hi", "id", "vi", "it", "en",
         ])
@@ -174,6 +176,8 @@ final class RealtimeTranslationSharedTests: XCTestCase {
         store.save(
             TranslationSettings(
                 targetLanguageCode: "it",
+                conversationLocalLanguageCode: "it",
+                conversationPartnerLanguageCode: "en",
                 audioInputSource: .defaultSource,
                 audioOutputRoute: .headphones,
                 macAudioBlendPercent: 35
@@ -184,6 +188,8 @@ final class RealtimeTranslationSharedTests: XCTestCase {
             store.read(),
             TranslationSettings(
                 targetLanguageCode: "it",
+                conversationLocalLanguageCode: "it",
+                conversationPartnerLanguageCode: "en",
                 audioInputSource: .defaultSource,
                 audioOutputRoute: .headphones,
                 macAudioBlendPercent: 35

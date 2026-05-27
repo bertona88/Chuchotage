@@ -81,6 +81,50 @@ Keep the original English clear in the first half so the viewer feels the proble
 
 ## Caption Options
 
+Recommended informal personal-account caption:
+
+```text
+Raga ho fatto un'app per quando il receptionist inglese ti spiega tutto velocissimo e tu rispondi "yes yes of course" senza aver capito assolutamente niente.
+
+Si chiama Chuchotage: metti le cuffiette e ti arriva la traduzione live nell'orecchio.
+
+Basically per smettere di fingere di capire.
+```
+
+Recommended personal-account caption:
+
+```text
+Il mio sport preferito quando viaggio: annuire in inglese e sperare che il cervello arrivi qualche secondo dopo.
+
+Spoiler: non arriva.
+
+Questa scena e' esattamente il motivo per cui sto costruendo Chuchotage: per quei momenti reali in cui vuoi solo capire cosa ti stanno dicendo, senza interrompere ogni frase e senza fingere di aver capito tutto.
+
+Cuffiette, secondo tentativo, traduzione live nell'orecchio.
+```
+
+Shorter personal version:
+
+```text
+Receptionist inglese velocissimo.
+Io: "yes yes of course".
+Sempre io, due secondi dopo: non ho capito niente.
+
+Chuchotage nasce per questi momenti: traduzione live nell'orecchio, quando la vita vera non aspetta Google Translate.
+```
+
+More founder-led version:
+
+```text
+Ho vissuto abbastanza situazioni cosi' da voler costruire qualcosa per risolverle.
+
+Il check-in, le indicazioni dette troppo in fretta, il sorriso automatico, il "yes yes of course", e poi il vuoto totale.
+
+Chuchotage e' pensato per questo: non per tradurre frasi isolate, ma per aiutarti a seguire quello che succede intorno a te, in tempo reale, con la traduzione nelle cuffiette.
+```
+
+Minimal caption:
+
 ```text
 POV: hai detto "yes yes of course" ma il tuo cervello era ancora al check-in.
 ```
@@ -91,6 +135,12 @@ I stopped pretending I understood. Chuchotage gives you live translation in your
 
 ```text
 Quando annuire non basta.
+```
+
+Optional hashtags:
+
+```text
+#Chuchotage #TraduzioneLive #ItalianiAllEstero #Viaggiare #LondonHotel
 ```
 
 ## Brand Guardrails

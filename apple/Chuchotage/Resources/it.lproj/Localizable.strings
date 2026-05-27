@@ -54,6 +54,14 @@
 "credential.updateInProgress.detail" = "In attesa del completamento dell'accesso al browser, dell'importazione del codice o dell'aggiornamento del Keychain.";
 "credential.useAPIKey" = "Usa una chiave API OpenAI";
 "credential.useCodexLogin" = "Accedi con ChatGPT";
+"conversation.chooseLanguages" = "Scegli due lingue diverse.";
+"conversation.localLabel" = "Questo lato";
+"conversation.partnerLabel" = "Altro lato";
+"conversation.reading" = "La traduzione arriva qui";
+"conversation.routeLabel" = "%@ -> %@";
+"conversation.speaking" = "Parla nel microfono";
+"conversation.tapToSpeak" = "Tocca il tuo lato quando parli";
+"conversation.waiting" = "Il testo tradotto appare qui.";
 "error.appleAudioNotWired" = "L'acquisizione e la riproduzione audio Apple non sono ancora cablate.";
 "error.audioEngineStartUnavailable" = "Chuchotage non è riuscito ad avviare l'audio dal vivo. Controlla l'accesso al microfono e riprova.";
 "error.audioInterrupted" = "L'audio è stato interrotto da un'altra app o chiamata. Inizia di nuovo la traduzione quando il tuo percorso audio è disponibile.";
@@ -92,6 +100,9 @@
 "error.unsupportedCaptureFormat" = "L'attuale formato di acquisizione audio non è supportato per la traduzione.";
 "error.validOpenAICredential" = "Inserisci credenziali OpenAI valide.";
 "header.translateTo" = "Traduci in %@";
+"home.mode.conversation" = "Conversazione";
+"home.mode.translate" = "Traduci";
+"home.outputLanguage" = "Traduci in %@";
 "mix.percentTranslated" = "%d%% tradotto";
 "network.reachChuchotage" = "Impossibile raggiungere chuchotage.ai. Controlla la rete del telefono e riprova.";
 "network.reachOpenAI" = "Impossibile raggiungere api.openai.com. Controlla la rete e riprova.";

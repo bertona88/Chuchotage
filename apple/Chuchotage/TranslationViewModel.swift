@@ -133,6 +133,18 @@ final class TranslationViewModel: ObservableObject {
         set { settings.targetLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(newValue) }
     }
 
+    var conversationLocalLanguage: TranslationLanguage {
+        settings.conversationLocalLanguage
+    }
+
+    var conversationPartnerLanguage: TranslationLanguage {
+        settings.conversationPartnerLanguage
+    }
+
+    var hasConversationLanguageConflict: Bool {
+        settings.conversationLocalLanguageCode == settings.conversationPartnerLanguageCode
+    }
+
     var microphoneSource: AudioInputSource {
         get { settings.audioInputSource }
         set { settings.audioInputSource = newValue }
@@ -180,6 +192,49 @@ final class TranslationViewModel: ObservableObject {
     }
 
     func stopTranslationFromSettings() {
+        Task {
+            await stopTranslation()
+        }
+    }
+
+    func changeTargetLanguageFromHome(to code: String) {
+        let sanitizedCode = TranslationLanguages.sanitizeOutputLanguageCode(code)
+        guard settings.targetLanguageCode != sanitizedCode else { return }
+
+        settings.targetLanguageCode = sanitizedCode
+        guard isTranslating else { return }
+
+        Task {
+            await restartTranslation()
+        }
+    }
+
+    func updateConversationLanguages(
+        localLanguageCode: String,
+        partnerLanguageCode: String
+    ) {
+        var nextSettings = settings
+        nextSettings.conversationLocalLanguageCode =
+            TranslationLanguages.sanitizeOutputLanguageCode(localLanguageCode)
+        nextSettings.conversationPartnerLanguageCode =
+            TranslationLanguages.sanitizeOutputLanguageCode(partnerLanguageCode)
+        settings = nextSettings
+    }
+
+    func startConversationTurn(_ speaker: ConversationSpeaker) {
+        guard !hasConversationLanguageConflict else { return }
+
+        settings.targetLanguageCode = speaker.targetLanguageCode(
+            localLanguageCode: settings.conversationLocalLanguageCode,
+            partnerLanguageCode: settings.conversationPartnerLanguageCode
+        )
+
+        Task {
+            await restartTranslation()
+        }
+    }
+
+    func stopConversationTurn() {
         Task {
             await stopTranslation()
         }
@@ -376,6 +431,13 @@ final class TranslationViewModel: ObservableObject {
         } else {
             status = .ready
         }
+    }
+
+    private func restartTranslation() async {
+        if isTranslating {
+            await stopTranslation()
+        }
+        await startTranslation()
     }
 
     private func updateRunningAudioSettingsIfNeeded(

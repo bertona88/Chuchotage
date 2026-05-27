@@ -85,17 +85,29 @@ enum AudioOutputRoute: String, CaseIterable, Codable, Identifiable, Sendable {
 
 struct TranslationSettings: Codable, Equatable, Sendable {
     var targetLanguageCode: String
+    var conversationLocalLanguageCode: String
+    var conversationPartnerLanguageCode: String
     var audioInputSource: AudioInputSource
     var audioOutputRoute: AudioOutputRoute
     var macAudioBlendPercent: Int
 
     init(
         targetLanguageCode: String = TranslationLanguages.defaultTargetLanguageCode,
+        conversationLocalLanguageCode: String = TranslationLanguages.defaultTargetLanguageCode,
+        conversationPartnerLanguageCode: String? = nil,
         audioInputSource: AudioInputSource = .defaultSource,
         audioOutputRoute: AudioOutputRoute = .systemDefault,
         macAudioBlendPercent: Int = MacAudioBlend.defaultPercent
     ) {
+        let sanitizedConversationLocalLanguageCode =
+            TranslationLanguages.sanitizeOutputLanguageCode(conversationLocalLanguageCode)
+
         self.targetLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(targetLanguageCode)
+        self.conversationLocalLanguageCode = sanitizedConversationLocalLanguageCode
+        self.conversationPartnerLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(
+            conversationPartnerLanguageCode
+                ?? TranslationLanguages.defaultConversationPartnerLanguageCode(for: sanitizedConversationLocalLanguageCode)
+        )
         self.audioInputSource = audioInputSource
         self.audioOutputRoute = audioOutputRoute
         self.macAudioBlendPercent = MacAudioBlend.clampPercent(macAudioBlendPercent)
@@ -103,6 +115,14 @@ struct TranslationSettings: Codable, Equatable, Sendable {
 
     var targetLanguage: TranslationLanguage {
         TranslationLanguages.outputLanguage(for: targetLanguageCode)
+    }
+
+    var conversationLocalLanguage: TranslationLanguage {
+        TranslationLanguages.outputLanguage(for: conversationLocalLanguageCode)
+    }
+
+    var conversationPartnerLanguage: TranslationLanguage {
+        TranslationLanguages.outputLanguage(for: conversationPartnerLanguageCode)
     }
 
     var notificationTitle: String {
@@ -117,6 +137,23 @@ struct TranslationSettings: Codable, Equatable, Sendable {
         audioInputSource != next.audioInputSource
             || audioOutputRoute != next.audioOutputRoute
             || macAudioBlendPercent != next.macAudioBlendPercent
+    }
+}
+
+enum ConversationSpeaker: String, Equatable, Sendable {
+    case local
+    case partner
+
+    func targetLanguageCode(
+        localLanguageCode: String,
+        partnerLanguageCode: String
+    ) -> String {
+        switch self {
+        case .local:
+            return TranslationLanguages.sanitizeOutputLanguageCode(partnerLanguageCode)
+        case .partner:
+            return TranslationLanguages.sanitizeOutputLanguageCode(localLanguageCode)
+        }
     }
 }
 
@@ -148,9 +185,15 @@ final class UserDefaultsTranslationSettingsStore: TranslationSettingsStoring, @u
     }
 
     func read() -> TranslationSettings {
-        TranslationSettings(
+        let conversationLocalLanguageCode = userDefaults.string(forKey: Keys.conversationLocalLanguage)
+            ?? TranslationLanguages.defaultTargetLanguageCode
+
+        return TranslationSettings(
             targetLanguageCode: userDefaults.string(forKey: Keys.targetLanguage)
                 ?? TranslationLanguages.defaultTargetLanguageCode,
+            conversationLocalLanguageCode: conversationLocalLanguageCode,
+            conversationPartnerLanguageCode: userDefaults.string(forKey: Keys.conversationPartnerLanguage)
+                ?? TranslationLanguages.defaultConversationPartnerLanguageCode(for: conversationLocalLanguageCode),
             audioInputSource: AudioInputSource.fromStorage(userDefaults.string(forKey: Keys.audioInputSource)),
             audioOutputRoute: AudioOutputRoute.fromStorage(userDefaults.string(forKey: Keys.audioOutputRoute)),
             macAudioBlendPercent: Self.readMacAudioBlendPercent(from: userDefaults)
@@ -161,6 +204,14 @@ final class UserDefaultsTranslationSettingsStore: TranslationSettingsStoring, @u
         userDefaults.set(
             TranslationLanguages.sanitizeOutputLanguageCode(settings.targetLanguageCode),
             forKey: Keys.targetLanguage
+        )
+        userDefaults.set(
+            TranslationLanguages.sanitizeOutputLanguageCode(settings.conversationLocalLanguageCode),
+            forKey: Keys.conversationLocalLanguage
+        )
+        userDefaults.set(
+            TranslationLanguages.sanitizeOutputLanguageCode(settings.conversationPartnerLanguageCode),
+            forKey: Keys.conversationPartnerLanguage
         )
         userDefaults.set(settings.audioInputSource.storageValue, forKey: Keys.audioInputSource)
         userDefaults.set(settings.audioOutputRoute.storageValue, forKey: Keys.audioOutputRoute)
@@ -180,6 +231,8 @@ final class UserDefaultsTranslationSettingsStore: TranslationSettingsStoring, @u
 
     private enum Keys {
         static let targetLanguage = "translation_settings.target_language"
+        static let conversationLocalLanguage = "translation_settings.conversation_local_language"
+        static let conversationPartnerLanguage = "translation_settings.conversation_partner_language"
         static let audioInputSource = "translation_settings.audio_input_source"
         static let audioOutputRoute = "translation_settings.audio_output_route"
         static let macAudioBlendPercent = "translation_settings.mac_audio_blend_percent"
