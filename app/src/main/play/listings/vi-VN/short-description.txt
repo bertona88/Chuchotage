@@ -1,0 +1,1 @@
+Dịch giọng nói realtime có tự động nhận diện. Dùng thông tin OpenAI của bạn.

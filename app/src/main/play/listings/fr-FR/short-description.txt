@@ -1,0 +1,1 @@
+Traduction vocale temps réel avec détection auto. Utilise votre compte OpenAI.

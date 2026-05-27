@@ -1,0 +1,3 @@
+/* Chuchotage localized Info.plist strings. */
+"NSAudioCaptureUsageDescription" = "Chuchotage cattura l’audio di riproduzione del Mac solo mentre la traduzione è attiva.";
+"NSMicrophoneUsageDescription" = "Chuchotage usa il microfono durante le sessioni di traduzione attive.";

@@ -1,0 +1,15 @@
+Chuchotage adalah utilitas terjemahan ucapan pribadi untuk Android. Mulai sesi, pilih bahasa yang ingin Anda dengar, dan Chuchotage otomatis mendeteksi bahasa sumber sambil menerjemahkan ucapan secara realtime.
+
+Gunakan kunci API OpenAI Anda sendiri atau kredensial bergaya ChatGPT/Codex. Chuchotage menyimpan kredensial di perangkat Anda, tidak memiliki iklan, tidak memakai SDK analitik, dan tidak memerlukan backend Chuchotage terhosting untuk penggunaan normal.
+
+Fitur:
+- Terjemahan ucapan realtime
+- Deteksi otomatis bahasa sumber
+- Bahasa keluaran dipilih di Setelan
+- Preferensi mikrofon ponsel atau headset
+- Kredensial disimpan di perangkat
+- Tanpa iklan atau SDK analitik
+
+Selama sesi terjemahan aktif, audio mikrofon dan konfigurasi terjemahan dikirim langsung ke OpenAI untuk menyediakan terjemahan realtime. Saat terjemahan dihentikan, tangkapan mikrofon berhenti.
+
+Chuchotage adalah dukungan terjemahan realtime pribadi dan mungkin tidak sempurna. Percakapan penting sebaiknya diperiksa dengan juru bahasa manusia yang berkualifikasi.

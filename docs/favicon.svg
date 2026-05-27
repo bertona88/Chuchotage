@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Chuchotage">
+  <rect width="64" height="64" rx="14" fill="#02070C"/>
+  <circle cx="32" cy="32" r="22" fill="#07131D"/>
+  <circle cx="32" cy="32" r="17" fill="none" stroke="#1D9BDA" stroke-width="3"/>
+  <path d="M17 34c5-7 10-7 15 0s10 7 15 0" fill="none" stroke="#68C8F4" stroke-width="4" stroke-linecap="round"/>
+  <path d="M23 44h18" fill="none" stroke="#F2E9DD" stroke-width="4" stroke-linecap="round"/>
+</svg>

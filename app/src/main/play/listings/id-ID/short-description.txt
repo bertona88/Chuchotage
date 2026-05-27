@@ -1,0 +1,1 @@
+Terjemahan suara realtime dengan deteksi otomatis. Memakai kredensial OpenAI.

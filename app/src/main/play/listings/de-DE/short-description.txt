@@ -1,0 +1,1 @@
+Echtzeit-Sprachübersetzung mit Autoerkennung. Nutzt deine OpenAI-Anmeldung.

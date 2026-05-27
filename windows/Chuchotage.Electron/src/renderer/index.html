@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chuchotage</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="app-header">
+        <img class="logo" src="../assets/chuchotage.ico" alt="">
+        <div>
+          <h1>Chuchotage</h1>
+          <p data-i18n="app.subtitle">Windows audio translation</p>
+        </div>
+        <div class="status-pill" id="status" data-i18n="status.ready">Ready</div>
+      </header>
+
+      <section class="hero">
+        <button class="start-button" id="startStop" type="button">
+          <span class="volume-shadow" id="volumeShadow" aria-hidden="true"></span>
+          <span id="startText" data-i18n="start.start">Start translation</span>
+          <span class="button-ring" id="buttonRing"></span>
+        </button>
+        <div class="volume-panel">
+          <div class="volume-copy">
+            <span data-i18n="signal.label">Input signal</span>
+            <strong id="signalStatus" data-tone="muted" data-i18n="signal.idle">Idle</strong>
+          </div>
+          <div
+            class="signal-waveform"
+            id="signalWaveform"
+            role="img"
+            aria-label="Audio input signal: Idle"
+            data-i18n-aria-label="signal.ariaIdle"
+          ></div>
+          <div class="volume-track" aria-hidden="true">
+            <div class="volume-fill" id="volumeFill"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="route-panel" aria-labelledby="routeHeading">
+        <div class="route-head">
+          <div>
+            <span class="section-kicker" data-i18n="route.kicker">Audio routing</span>
+            <h2 id="routeHeading" data-i18n="route.heading">Choose how Chuchotage avoids feedback</h2>
+          </div>
+          <div class="route-status" id="routeStatus" data-tone="warn" data-i18n="route.checking">Checking route</div>
+        </div>
+
+        <div class="route-toggle" role="radiogroup" aria-label="Audio routing setup" data-i18n-aria-label="route.setupAria">
+          <label class="route-choice">
+            <input type="radio" name="routeMode" value="singleHeadset" checked>
+            <span>
+              <strong data-i18n="route.mode.singleHeadset.title">Single headset</strong>
+              <small data-i18n="route.mode.singleHeadset.detail">No admin</small>
+            </span>
+          </label>
+          <label class="route-choice">
+            <input type="radio" name="routeMode" value="separateDevices">
+            <span>
+              <strong data-i18n="route.mode.separateDevices.title">Separate devices</strong>
+              <small data-i18n="route.mode.separateDevices.detail">No admin fallback</small>
+            </span>
+          </label>
+          <label class="route-choice">
+            <input type="radio" name="routeMode" value="virtualDevice">
+            <span>
+              <strong data-i18n="route.mode.virtualDevice.title">Virtual device</strong>
+              <small data-i18n="route.mode.virtualDevice.detail">Admin route</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="route-copy">
+          <p id="routeCopy"></p>
+          <ol id="routeSteps"></ol>
+          <p class="route-note" id="routeNote"></p>
+        </div>
+      </section>
+
+      <section class="controls-grid">
+        <label class="field wide">
+          <span data-i18n="field.originalApp">Original app</span>
+          <select id="originalSession"></select>
+        </label>
+
+        <div class="field">
+          <label class="field-label" for="language" data-i18n="field.outputLanguage">Output language</label>
+          <select id="language"></select>
+          <a
+            class="field-link"
+            href="https://www.chuchotage.ai/#supported-input-languages"
+            data-external-link
+            data-i18n="field.supportedInputLanguages"
+          >Supported input languages</a>
+        </div>
+
+        <label class="field">
+          <span data-i18n="field.captureOutput">Capture output</span>
+          <select id="captureDevice"></select>
+        </label>
+
+        <label class="field">
+          <span data-i18n="field.translatedPlayback">Translated playback</span>
+          <select id="playbackDevice"></select>
+        </label>
+
+        <section class="mix-panel wide">
+          <div class="mix-copy">
+            <span data-i18n="mix.title">Mix</span>
+            <strong id="mixLabel">Translated 50% / Original 50%</strong>
+          </div>
+          <input id="mix" type="range" min="0" max="100" step="1" value="50">
+        </section>
+
+        <section class="credential-panel wide">
+          <label class="field api-field">
+            <span>OpenAI / Codex</span>
+            <input
+              id="apiKey"
+              type="password"
+              placeholder="OpenAI API key, saved key, or Codex auth"
+              data-i18n-placeholder="credential.placeholder"
+            >
+          </label>
+          <label class="check-row">
+            <input id="rememberKey" type="checkbox">
+            <span data-i18n="credential.remember">Remember on this Windows account</span>
+          </label>
+          <p id="credentialHint"></p>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <button id="refresh" type="button" data-i18n="button.refreshDevices">Refresh devices</button>
+        <p id="message"></p>
+      </footer>
+    </main>
+    <script src="locales.js"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>

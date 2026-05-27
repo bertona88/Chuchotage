@@ -1,0 +1,16 @@
+{
+  "name": "chuchotage-dubbing-toolkit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "chuchotage-dub": "./bin/chuchotage-dub.mjs"
+  },
+  "scripts": {
+    "dub": "node ./bin/chuchotage-dub.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

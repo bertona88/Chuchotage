@@ -1,0 +1,1 @@
+Realtime speech translation with auto detection. Uses your OpenAI credential.

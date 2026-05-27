@@ -1,0 +1,19 @@
+{
+  "name": "chuchotage-windows-electron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron shell for the Chuchotage Windows companion prototype.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:dev": "electron . --dev",
+    "build:backend": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$dotnet = Join-Path $env:USERPROFILE '.dotnet/dotnet.exe'; & $dotnet publish ../Chuchotage.Windows/Chuchotage.Windows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true\"",
+    "stage:backend": "node scripts/stage-backend.js",
+    "package": "npm run build:backend && npm run stage:backend && node node_modules/electron/install.js && electron-packager . Chuchotage --platform=win32 --arch=x64 --out=dist --overwrite --executable-name=ChuchotageHost --ignore=dist && node scripts/stage-launcher.js",
+    "install:user": "npm run package && node scripts/install-user.js"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.3.6",
+    "electron": "^42.0.1"
+  }
+}

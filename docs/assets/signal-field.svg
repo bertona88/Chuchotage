@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Abstract translation signal</title>
+  <desc id="desc">Layered blue and cream signal lines on a dark ink field.</desc>
+  <defs>
+    <radialGradient id="field" cx="66%" cy="48%" r="70%">
+      <stop offset="0%" stop-color="#12344a"/>
+      <stop offset="46%" stop-color="#07131d"/>
+      <stop offset="100%" stop-color="#02070c"/>
+    </radialGradient>
+    <linearGradient id="blueLine" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#68c8f4" stop-opacity="0"/>
+      <stop offset="32%" stop-color="#68c8f4" stop-opacity="0.72"/>
+      <stop offset="65%" stop-color="#1d9bda" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#68c8f4" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="creamLine" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#f2e9dd" stop-opacity="0"/>
+      <stop offset="42%" stop-color="#f2e9dd" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#f2e9dd" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="11" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#field)"/>
+  <g opacity="0.7">
+    <circle cx="1130" cy="470" r="420" fill="none" stroke="#2a3b47" stroke-width="2"/>
+    <circle cx="1130" cy="470" r="282" fill="none" stroke="#2a3b47" stroke-width="2"/>
+    <circle cx="1130" cy="470" r="146" fill="none" stroke="#2a3b47" stroke-width="2"/>
+  </g>
+  <g filter="url(#glow)" fill="none" stroke-linecap="round">
+    <path d="M-60 520 C180 360 350 390 520 510 S850 660 1080 430 S1400 260 1660 410" stroke="url(#blueLine)" stroke-width="12"/>
+    <path d="M-80 610 C180 500 380 530 560 635 S865 780 1060 580 S1370 410 1680 545" stroke="url(#creamLine)" stroke-width="6" opacity="0.8"/>
+    <path d="M-100 425 C150 250 360 320 570 430 S890 560 1090 332 S1390 185 1700 320" stroke="url(#blueLine)" stroke-width="5" opacity="0.55"/>
+  </g>
+  <g opacity="0.78" stroke="#68c8f4" stroke-linecap="round">
+    <line x1="980" y1="396" x2="980" y2="548" stroke-width="7"/>
+    <line x1="1020" y1="340" x2="1020" y2="604" stroke-width="7"/>
+    <line x1="1060" y1="380" x2="1060" y2="564" stroke-width="7"/>
+    <line x1="1100" y1="315" x2="1100" y2="630" stroke-width="7"/>
+    <line x1="1140" y1="360" x2="1140" y2="586" stroke-width="7"/>
+    <line x1="1180" y1="416" x2="1180" y2="530" stroke-width="7"/>
+  </g>
+  <rect width="1600" height="1000" fill="#02070c" opacity="0.18"/>
+</svg>

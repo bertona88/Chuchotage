@@ -1,0 +1,15 @@
+Chuchotage is a personal speech translation utility for Android. Start a session, choose the language you want to hear, and Chuchotage automatically detects the source language while translating speech in real time.
+
+Use your own OpenAI API key or ChatGPT/Codex-style credential. Chuchotage stores credentials on your device, has no ads, no analytics SDKs, and does not require a hosted Chuchotage backend for normal use.
+
+Features:
+- Realtime speech translation
+- Automatic source-language detection
+- Settings-selected output language
+- Phone mic or headset mic preference
+- Credentials stored on device
+- No ads or analytics SDKs
+
+During an active translation session, microphone audio and translation settings are sent directly to OpenAI to provide realtime translation. When translation is stopped, microphone capture stops.
+
+Chuchotage is for personal realtime translation support and may not be perfect. Important conversations should be checked with a qualified human interpreter.

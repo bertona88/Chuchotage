@@ -1,0 +1,3 @@
+/* Chuchotage localized Info.plist strings. */
+"NSAudioCaptureUsageDescription" = "Chuchotage chỉ ghi âm thanh phát lại trên Mac khi dịch đang hoạt động.";
+"NSMicrophoneUsageDescription" = "Chuchotage dùng micro trong các phiên dịch đang hoạt động.";

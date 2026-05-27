@@ -1,0 +1,3 @@
+/* Chuchotage localized Info.plist strings. */
+"NSAudioCaptureUsageDescription" = "Chuchotage menangkap audio pemutaran Mac hanya saat terjemahan aktif.";
+"NSMicrophoneUsageDescription" = "Chuchotage menggunakan mikrofon selama sesi terjemahan aktif.";

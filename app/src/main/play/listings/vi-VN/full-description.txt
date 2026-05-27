@@ -1,0 +1,15 @@
+Chuchotage là tiện ích dịch lời nói cá nhân cho Android. Bắt đầu một phiên, chọn ngôn ngữ bạn muốn nghe, và Chuchotage tự động nhận diện ngôn ngữ nguồn trong khi dịch lời nói theo thời gian thực.
+
+Dùng khóa API OpenAI của bạn hoặc thông tin đăng nhập kiểu ChatGPT/Codex. Chuchotage lưu thông tin đăng nhập trên thiết bị của bạn, không có quảng cáo, không dùng SDK phân tích và không cần backend Chuchotage được lưu trữ cho việc sử dụng thông thường.
+
+Tính năng:
+- Dịch lời nói theo thời gian thực
+- Tự động nhận diện ngôn ngữ nguồn
+- Ngôn ngữ đầu ra chọn trong Cài đặt
+- Ưu tiên micro điện thoại hoặc tai nghe
+- Thông tin đăng nhập lưu trên thiết bị
+- Không quảng cáo hoặc SDK phân tích
+
+Trong phiên dịch đang hoạt động, âm thanh micro và cấu hình dịch được gửi trực tiếp đến OpenAI để cung cấp dịch thời gian thực. Khi dừng dịch, việc ghi micro cũng dừng.
+
+Chuchotage là công cụ hỗ trợ dịch thời gian thực cá nhân và có thể không hoàn hảo. Các cuộc trò chuyện quan trọng nên được kiểm tra với thông dịch viên con người đủ chuyên môn.

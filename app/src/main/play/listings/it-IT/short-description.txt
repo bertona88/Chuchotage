@@ -1,0 +1,1 @@
+Traduzione vocale realtime con rilevamento auto. Usa la tua credenziale OpenAI.

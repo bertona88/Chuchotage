@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:contentDescription="@string/widget_description"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <ImageView
+        android:id="@+id/widget_logo"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:src="@mipmap/ic_chuchotage_launcher" />
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="@string/app_name"
+        android:textColor="#E8EDF1"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/widget_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:text="@string/status_ready"
+        android:textColor="#A1ADB7"
+        android:textSize="11sp" />
+
+    <TextView
+        android:id="@+id/widget_button"
+        android:layout_width="match_parent"
+        android:layout_height="26dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/widget_button_background"
+        android:contentDescription="@string/widget_description"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="@string/widget_start"
+        android:textColor="#02070C"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+</LinearLayout>

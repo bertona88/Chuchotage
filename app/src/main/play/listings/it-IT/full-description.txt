@@ -1,0 +1,15 @@
+Chuchotage è un’utilità personale di traduzione vocale per Android. Avvia una sessione, scegli la lingua che vuoi ascoltare e Chuchotage rileva automaticamente la lingua sorgente mentre traduce la voce in tempo reale.
+
+Usa la tua chiave API OpenAI o una credenziale in stile ChatGPT/Codex. Chuchotage salva le credenziali sul dispositivo, non ha pubblicità, non usa SDK di analytics e non richiede un backend Chuchotage ospitato per l’uso normale.
+
+Funzioni:
+- Traduzione vocale in tempo reale
+- Rilevamento automatico della lingua sorgente
+- Lingua di uscita scelta nelle impostazioni
+- Preferenza per microfono del telefono o delle cuffie
+- Credenziali salvate sul dispositivo
+- Nessuna pubblicità o SDK di analytics
+
+Durante una sessione attiva, l’audio del microfono e le impostazioni di traduzione vengono inviati direttamente a OpenAI per fornire traduzione in tempo reale. Quando la traduzione viene interrotta, la cattura del microfono si ferma.
+
+Chuchotage è un supporto personale per la traduzione in tempo reale e potrebbe non essere perfetto. Le conversazioni importanti devono essere controllate con un interprete umano qualificato.

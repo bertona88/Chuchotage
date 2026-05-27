@@ -1,0 +1,15 @@
+Chuchotage ist ein persönliches Sprachübersetzungswerkzeug für Android. Starte eine Sitzung, wähle die Sprache, die du hören möchtest, und Chuchotage erkennt die Ausgangssprache automatisch, während es Sprache in Echtzeit übersetzt.
+
+Verwende deinen eigenen OpenAI-API-Schlüssel oder eine ChatGPT/Codex-ähnliche Anmeldung. Chuchotage speichert Anmeldedaten auf deinem Gerät, hat keine Werbung, keine Analytics-SDKs und benötigt für die normale Nutzung kein gehostetes Chuchotage-Backend.
+
+Funktionen:
+- Echtzeit-Sprachübersetzung
+- Automatische Erkennung der Ausgangssprache
+- Ausgabesprache in den Einstellungen
+- Wahl zwischen Telefonmikrofon und Headset-Mikrofon
+- Anmeldedaten auf dem Gerät gespeichert
+- Keine Werbung und keine Analytics-SDKs
+
+Während einer aktiven Übersetzungssitzung werden Mikrofon-Audio und Übersetzungseinstellungen direkt an OpenAI gesendet, um Echtzeitübersetzung bereitzustellen. Wenn die Übersetzung gestoppt wird, endet auch die Mikrofonaufnahme.
+
+Chuchotage ist persönliche Unterstützung für Echtzeitübersetzung und möglicherweise nicht perfekt. Wichtige Gespräche sollten mit qualifizierten menschlichen Dolmetschern geprüft werden.

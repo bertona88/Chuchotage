@@ -1,0 +1,3 @@
+/* Chuchotage localized Info.plist strings. */
+"NSAudioCaptureUsageDescription" = "Chuchotage केवल अनुवाद सक्रिय होने पर Mac प्लेबैक ऑडियो कैप्चर करता है।";
+"NSMicrophoneUsageDescription" = "Chuchotage सक्रिय अनुवाद सत्रों के दौरान माइक्रोफोन का उपयोग करता है।";
