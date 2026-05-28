@@ -3,6 +3,8 @@
   const GEO_ENDPOINT = "/api/geo-language";
   const APP_STORE_URL = "https://apps.apple.com/it/app/chuchotage/id6770434335";
   const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.andreabertoncini.chuchotage";
+  const STORE_REDIRECT_URL = "/download/app/";
+  const STORE_QR_URL = "/assets/chuchotage-store-qr.svg";
 
   const LANGUAGES = [
     { code: "en", label: "English" },
@@ -2199,6 +2201,13 @@
         macAction: "Download for Mac",
         soon: "Coming soon",
       },
+      qr: {
+        eyebrow: "Scan to install",
+        title: "Scan. Get the right store.",
+        body: "Point your phone at the code to open Chuchotage in App Store or Google Play.",
+        action: "Open on this device",
+        alt: "QR code for Chuchotage download",
+      },
       direct: {
         eyebrow: "Desktop",
         title: "Download the Mac app. Windows is next.",
@@ -2222,6 +2231,7 @@
       meta: { title: "Obtén Chuchotage | Descarga la app de traducción en vivo", description: "Obtén Chuchotage para iPhone, iPad, Android y Mac, y mira qué llega después.", ogTitle: "Obtén Chuchotage", ogDescription: "Elige tu dispositivo e instala Chuchotage para traducción en vivo discreta." },
       hero: { eyebrow: "Descargar", title: "Obtén Chuchotage", lede: "Elige tu dispositivo e instala la app discreta de traducción en vivo.", primary: "Abrir App Store", secondary: "Descargar para Mac" },
       platforms: { eyebrow: "Dispositivos", title: "Empieza con la versión para lo que usas.", iosBody: "Instala Chuchotage desde App Store.", androidBody: "Instala Chuchotage desde Google Play.", macBody: "Descarga Chuchotage para Mac.", windowsBody: "La descarga para Windows llegará pronto.", store: "Abrir App Store", play: "Abrir Google Play", macAction: "Descargar para Mac", soon: "Próximamente" },
+      qr: { eyebrow: "Escanea para instalar", title: "Escanea. Ve a la tienda correcta.", body: "Apunta tu teléfono al código para abrir Chuchotage en App Store o Google Play.", action: "Abrir en este dispositivo", alt: "Código QR para descargar Chuchotage" },
       direct: { eyebrow: "Escritorio", title: "Descarga la app para Mac. Windows es lo siguiente.", macStatus: "Lista para descargar", windowsStatus: "Próximamente" },
       notes: { eyebrow: "Antes de empezar", title: "Inicia sesión y usa auriculares.", items: ["Usa inicio de sesión con ChatGPT donde esté disponible, una prueba cuando exista, o tu propia clave de OpenAI.", "Los auriculares mantienen la traducción más privada y reducen el retorno al micrófono.", "Chuchotage no tiene anuncios, seguimiento ni historial de transcripciones guardado."] },
     },
@@ -2232,6 +2242,7 @@
       meta: { title: "Ottieni Chuchotage | Scarica l'app di traduzione live", description: "Ottieni Chuchotage per iPhone, iPad, Android e Mac, e scopri cosa arriverà dopo.", ogTitle: "Ottieni Chuchotage", ogDescription: "Scegli il tuo dispositivo e installa Chuchotage per una traduzione live discreta." },
       hero: { eyebrow: "Download", title: "Ottieni Chuchotage", lede: "Scegli il tuo dispositivo e installa l'app discreta per la traduzione live.", primary: "Apri App Store", secondary: "Download per Mac" },
       platforms: { eyebrow: "Dispositivi", title: "Inizia dalla versione adatta a ciò che usi.", iosBody: "Installa Chuchotage da App Store.", androidBody: "Installa Chuchotage da Google Play.", macBody: "Scarica Chuchotage per Mac.", windowsBody: "Il download per Windows arriverà presto.", store: "Apri App Store", play: "Apri Google Play", macAction: "Download per Mac", soon: "In arrivo" },
+      qr: { eyebrow: "Scansiona per installare", title: "Scansiona. Vai allo store giusto.", body: "Punta il telefono sul codice per aprire Chuchotage su App Store o Google Play.", action: "Apri su questo dispositivo", alt: "Codice QR per scaricare Chuchotage" },
       direct: { eyebrow: "Desktop", title: "Scarica l'app per Mac. Windows è il prossimo.", macStatus: "Pronto da scaricare", windowsStatus: "In arrivo" },
       notes: { eyebrow: "Prima di iniziare", title: "Accedi, poi usa le cuffie.", items: ["Usa l'accesso ChatGPT dove supportato, una prova quando disponibile, o la tua chiave OpenAI.", "Le cuffie aiutano a tenere la traduzione più privata e riducono il rientro nel microfono.", "Chuchotage non ha annunci, tracciamento o cronologia delle trascrizioni salvata."] },
     },
@@ -2242,6 +2253,7 @@
       meta: { title: "Obtenir Chuchotage | Télécharger l'app de traduction en direct", description: "Obtenez Chuchotage pour iPhone, iPad, Android et Mac, et voyez ce qui arrive ensuite.", ogTitle: "Obtenir Chuchotage", ogDescription: "Choisissez votre appareil et installez Chuchotage pour une traduction en direct discrète." },
       hero: { eyebrow: "Télécharger", title: "Obtenir Chuchotage", lede: "Choisissez votre appareil et installez l'app discrète de traduction en direct.", primary: "Ouvrir l'App Store", secondary: "Télécharger pour Mac" },
       platforms: { eyebrow: "Appareils", title: "Commencez avec la version adaptée à ce que vous utilisez.", iosBody: "Installez Chuchotage depuis l'App Store.", androidBody: "Installez Chuchotage depuis Google Play.", macBody: "Téléchargez Chuchotage pour Mac.", windowsBody: "Le téléchargement Windows arrive bientôt.", store: "Ouvrir l'App Store", play: "Ouvrir Google Play", macAction: "Télécharger pour Mac", soon: "Bientôt" },
+      qr: { eyebrow: "Scanner pour installer", title: "Scannez. Ouvrez la bonne boutique.", body: "Pointez votre téléphone vers le code pour ouvrir Chuchotage dans l'App Store ou Google Play.", action: "Ouvrir sur cet appareil", alt: "Code QR pour télécharger Chuchotage" },
       direct: { eyebrow: "Ordinateur", title: "Téléchargez l'app Mac. Windows arrive ensuite.", macStatus: "Prêt à télécharger", windowsStatus: "Bientôt" },
       notes: { eyebrow: "Avant de commencer", title: "Connectez-vous, puis portez un casque.", items: ["Utilisez la connexion ChatGPT quand elle est disponible, un essai si proposé, ou votre propre clé OpenAI.", "Le casque garde la traduction plus privée et réduit le retour dans le micro.", "Chuchotage n'a pas de publicité, pas de suivi et pas d'historique de transcription enregistré."] },
     },
@@ -2252,6 +2264,7 @@
       meta: { title: "Chuchotage holen | Live-Übersetzungs-App herunterladen", description: "Hol dir Chuchotage für iPhone, iPad, Android und Mac und sieh, was als Nächstes kommt.", ogTitle: "Chuchotage holen", ogDescription: "Wähle dein Gerät und installiere Chuchotage für ruhige Live-Übersetzung." },
       hero: { eyebrow: "Download", title: "Chuchotage holen", lede: "Wähle dein Gerät und installiere die ruhige App für Live-Übersetzung.", primary: "App Store öffnen", secondary: "Mac-Download" },
       platforms: { eyebrow: "Geräte", title: "Starte mit der Version für das, was du nutzt.", iosBody: "Installiere Chuchotage aus dem App Store.", androidBody: "Installiere Chuchotage aus Google Play.", macBody: "Lade Chuchotage für Mac herunter.", windowsBody: "Der Windows-Download kommt bald.", store: "App Store öffnen", play: "Google Play öffnen", macAction: "Für Mac herunterladen", soon: "Demnächst" },
+      qr: { eyebrow: "Scannen zum Installieren", title: "Scannen. Den passenden Store öffnen.", body: "Richte dein Telefon auf den Code, um Chuchotage im App Store oder bei Google Play zu öffnen.", action: "Auf diesem Gerät öffnen", alt: "QR-Code zum Herunterladen von Chuchotage" },
       direct: { eyebrow: "Desktop", title: "Lade die Mac-App herunter. Windows kommt als Nächstes.", macStatus: "Bereit zum Download", windowsStatus: "Demnächst" },
       notes: { eyebrow: "Vor dem Start", title: "Melde dich an und trage Kopfhörer.", items: ["Nutze ChatGPT-Anmeldung, wo unterstützt, einen Test, wenn verfügbar, oder deinen eigenen OpenAI-Schlüssel.", "Kopfhörer halten die Übersetzung privater und reduzieren Rückkopplung ins Mikrofon.", "Chuchotage hat keine Werbung, kein Tracking und keinen gespeicherten Transkriptverlauf."] },
     },
@@ -2262,6 +2275,7 @@
       meta: { title: "Obter Chuchotage | Baixar o app de tradução ao vivo", description: "Obtenha Chuchotage para iPhone, iPad, Android e Mac e veja o que vem depois.", ogTitle: "Obter Chuchotage", ogDescription: "Escolha seu dispositivo e instale Chuchotage para tradução ao vivo discreta." },
       hero: { eyebrow: "Download", title: "Obter Chuchotage", lede: "Escolha seu dispositivo e instale o app discreto de tradução ao vivo.", primary: "Abrir App Store", secondary: "Download para Mac" },
       platforms: { eyebrow: "Dispositivos", title: "Comece pela versão para o que você usa.", iosBody: "Instale Chuchotage pela App Store.", androidBody: "Instale Chuchotage pelo Google Play.", macBody: "Baixe Chuchotage para Mac.", windowsBody: "O download para Windows chega em breve.", store: "Abrir App Store", play: "Abrir Google Play", macAction: "Baixar para Mac", soon: "Em breve" },
+      qr: { eyebrow: "Escaneie para instalar", title: "Escaneie. Abra a loja certa.", body: "Aponte seu telefone para o código para abrir o Chuchotage na App Store ou no Google Play.", action: "Abrir neste dispositivo", alt: "Código QR para baixar o Chuchotage" },
       direct: { eyebrow: "Desktop", title: "Baixe o app para Mac. Windows vem depois.", macStatus: "Pronto para baixar", windowsStatus: "Em breve" },
       notes: { eyebrow: "Antes de começar", title: "Faça login e use fones.", items: ["Use login com ChatGPT onde houver suporte, um teste quando disponível, ou sua própria chave OpenAI.", "Fones ajudam a manter a tradução mais privada e reduzem retorno no microfone.", "Chuchotage não tem anúncios, rastreamento nem histórico de transcrições salvo."] },
     },
@@ -2416,12 +2430,19 @@
       </section>
 
       <section class="cta-section">
-        <div class="section-inner cta-layout">
-          <div>
+        <div class="section-inner cta-layout cta-layout-with-qr">
+          <div class="cta-copy">
             <p class="eyebrow">${escapeHtml(download.nav)}</p>
             <h2>${escapeHtml(download.homeCtaTitle || home.cta.title)}</h2>
+            <p>${escapeHtml(download.qr.body)}</p>
+            <div class="hero-actions">
+              <a class="secondary-link" href="download/">${escapeHtml(download.nav)}</a>
+              <a class="text-link" href="${STORE_REDIRECT_URL}">${escapeHtml(download.qr.action)}</a>
+            </div>
           </div>
-          <a class="secondary-link" href="download/">${escapeHtml(download.nav)}</a>
+          <a class="qr-frame cta-qr-frame" href="${STORE_REDIRECT_URL}" aria-label="${escapeHtml(download.qr.action)}">
+            <img class="qr-code-image" src="${STORE_QR_URL}" alt="${escapeHtml(download.qr.alt)}">
+          </a>
         </div>
       </section>
     `;
@@ -2446,6 +2467,20 @@
           <span></span>
           <span></span>
           <span></span>
+        </div>
+      </section>
+
+      <section class="download-section store-qr-section" id="phone-qr">
+        <div class="section-inner store-qr-layout">
+          <div class="store-qr-copy">
+            <p class="eyebrow">${escapeHtml(download.qr.eyebrow)}</p>
+            <h2>${escapeHtml(download.qr.title)}</h2>
+            <p>${escapeHtml(download.qr.body)}</p>
+            <a class="text-link" href="${STORE_REDIRECT_URL}">${escapeHtml(download.qr.action)}</a>
+          </div>
+          <a class="qr-frame" href="${STORE_REDIRECT_URL}" aria-label="${escapeHtml(download.qr.action)}">
+            <img class="qr-code-image" src="${STORE_QR_URL}" alt="${escapeHtml(download.qr.alt)}">
+          </a>
         </div>
       </section>
 

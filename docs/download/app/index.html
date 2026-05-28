@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Get Chuchotage | Download</title>
+    <meta name="description" content="Open Chuchotage in App Store or Google Play.">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#02070c">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://www.chuchotage.ai/download/app/">
+    <link rel="stylesheet" href="../../styles.css?v=20260528b">
+  </head>
+  <body data-page="app-redirect">
+    <header class="site-header">
+      <a class="brand-link" href="../../" aria-label="Chuchotage home">Chuchotage</a>
+      <nav aria-label="Site navigation">
+        <a href="../../">Home</a>
+        <a href="../">Download</a>
+        <a href="../../privacy/">Privacy</a>
+      </nav>
+    </header>
+
+    <main class="redirect-main">
+      <section class="redirect-copy" aria-labelledby="redirect-title">
+        <p class="eyebrow">Download</p>
+        <h1 id="redirect-title">Get Chuchotage</h1>
+        <p class="redirect-status" data-redirect-status aria-live="polite">Opening the right store...</p>
+        <p>On a computer, choose a store below.</p>
+        <div class="redirect-actions">
+          <a class="primary-link store-action-link" href="https://apps.apple.com/it/app/chuchotage/id6770434335" data-store="app">
+            <svg class="store-icon app-store-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M17.7 13.1c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-1.9-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.5 1.3-.1 1.8-.8 3.4-.8 1.6 0 2.1.8 3.4.8 1.4 0 2.3-1.2 3.2-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.8-1.1-2.9-4.2zM15.3 5.9c.7-.9 1.2-2.1 1.1-3.3-1 .1-2.2.7-2.9 1.6-.6.8-1.2 2-1.1 3.2 1.1.1 2.2-.6 2.9-1.5z"></path>
+            </svg>
+            <span>Open App Store</span>
+          </a>
+          <a class="secondary-link store-action-link" href="https://play.google.com/store/apps/details?id=com.andreabertoncini.chuchotage" data-store="play">
+            <svg class="store-icon play-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="#00D2FF" d="M3.2 2.1c-.3.3-.5.7-.5 1.2v17.4c0 .5.2.9.5 1.2l.1.1 9.8-9.8v-.2L3.3 2l-.1.1z"></path>
+              <path fill="#FFCE00" d="M16.3 15.5l-3.2-3.2v-.2l3.2-3.2.1.1 3.8 2.2c1.1.6 1.1 1.6 0 2.2l-3.8 2.2-.1-.1z"></path>
+              <path fill="#FF3A44" d="M16.4 15.4l-3.3-3.3-9.9 9.9c.5.5 1.2.5 2.1 0l11.1-6.6z"></path>
+              <path fill="#00F076" d="M16.4 8.8 5.3 2.2c-.9-.5-1.6-.5-2.1 0l9.9 9.9 3.3-3.3z"></path>
+            </svg>
+            <span>Open Google Play</span>
+          </a>
+          <a class="secondary-link" href="../">All downloads</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Chuchotage</span>
+      <a href="../">Download</a>
+      <a href="../../privacy/">Privacy policy</a>
+      <a href="https://andreabertoncini.com/">Andrea Bertoncini</a>
+    </footer>
+
+    <script>
+      (() => {
+        const APP_STORE_URL = "https://apps.apple.com/it/app/chuchotage/id6770434335";
+        const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.andreabertoncini.chuchotage";
+
+        function pickStoreTarget() {
+          const userAgent = (navigator.userAgent || "").toLowerCase();
+          const userAgentPlatform = navigator.userAgentData && navigator.userAgentData.platform
+            ? navigator.userAgentData.platform
+            : "";
+          const platform = `${navigator.platform || ""} ${userAgentPlatform}`.toLowerCase();
+          const isAndroid = userAgent.includes("android") || platform.includes("android");
+          const isTouchIpad = userAgent.includes("macintosh") && navigator.maxTouchPoints > 1;
+          const isAppleMobile = /iphone|ipad|ipod/.test(userAgent) || isTouchIpad;
+
+          if (isAndroid) {
+            return { label: "Google Play", url: PLAY_STORE_URL };
+          }
+
+          if (isAppleMobile) {
+            return { label: "the App Store", url: APP_STORE_URL };
+          }
+
+          return null;
+        }
+
+        function openDetectedStore() {
+          const status = document.querySelector("[data-redirect-status]");
+          const target = pickStoreTarget();
+
+          if (!target) {
+            if (status) {
+              status.textContent = "Choose your store.";
+            }
+            return;
+          }
+
+          if (status) {
+            status.textContent = `Opening ${target.label}...`;
+          }
+
+          window.setTimeout(() => {
+            window.location.replace(target.url);
+          }, 250);
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", openDetectedStore);
+        } else {
+          openDetectedStore();
+        }
+      })();
+    </script>
+  </body>
+</html>
