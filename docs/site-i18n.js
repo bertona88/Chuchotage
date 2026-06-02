@@ -2513,7 +2513,7 @@
                 <h3>Mac app</h3>
                 <p>${escapeHtml(download.platforms.macBody)}</p>
               </div>
-              <a class="store-link" href="/download/macos/Chuchotage-0.1.0-macOS.dmg">${escapeHtml(download.platforms.macAction)}</a>
+              <a class="store-link" href="/download/macos/Chuchotage-0.1.1-macOS.dmg">${escapeHtml(download.platforms.macAction)}</a>
             </section>
             <section class="platform-row">
               <div>
@@ -2534,7 +2534,7 @@
             <h2>${escapeHtml(download.direct.title)}</h2>
           </div>
           <div class="download-table">
-            <a class="download-row" href="/download/macos/Chuchotage-0.1.0-macOS.dmg">
+            <a class="download-row" href="/download/macos/Chuchotage-0.1.1-macOS.dmg">
               <span>macOS</span>
               <span>Chuchotage for Mac</span>
               <span>${escapeHtml(download.direct.macStatus)}</span>
