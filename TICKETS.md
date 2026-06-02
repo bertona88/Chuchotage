@@ -1,5 +1,11 @@
 # Chuchotage Tickets
 
+
+NEW TICKETS AND PRODUCT GUIDELINES
+- We need to display or detect when users are not using headphones and tell them to use headphones, otherwise there is feedback loop and the thing keeps repeating itself.
+
+
+
 Lightweight Linear-style board for product and implementation follow-up. Keep ticket scope small, update status as work moves, and preserve cross-platform product boundaries unless a ticket explicitly targets multiple surfaces.
 
 Status values: `Backlog`, `Ready`, `In Progress`, `Blocked`, `Done`.
