@@ -19,16 +19,20 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
     private let urlSession: URLSession
     private let webSocketURL: URL
     private let openTimeoutNanoseconds: UInt64
+    private let closeTimeoutNanoseconds: UInt64
     private let webSocketOpenObserver: RealtimeWebSocketOpenObserver?
     private let logger = Logger(subsystem: "ai.chuchotage.apple", category: "realtime")
     private var socket: URLSessionWebSocketTask?
     private var receiveTask: Task<Void, Never>?
     private var eventContinuation: AsyncStream<RealtimeTranslationEvent>.Continuation?
+    private var sessionClosedWaiter: OneShotVoidContinuation?
+    private var isClosingTranslationSession = false
 
     init(
         urlSession: URLSession? = nil,
         webSocketURL: URL = RealtimeTranslationClient.translationWebSocketURL,
-        openTimeoutNanoseconds: UInt64 = 5_000_000_000
+        openTimeoutNanoseconds: UInt64 = 5_000_000_000,
+        closeTimeoutNanoseconds: UInt64 = 2_000_000_000
     ) {
         if let urlSession {
             self.urlSession = urlSession
@@ -44,6 +48,7 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
         }
         self.webSocketURL = webSocketURL
         self.openTimeoutNanoseconds = openTimeoutNanoseconds
+        self.closeTimeoutNanoseconds = closeTimeoutNanoseconds
     }
 
     func connect(
@@ -111,17 +116,39 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
     }
 
     func disconnect() async {
+        await closeTranslationSessionIfPossible()
         disconnectInternal()
     }
 
     private func disconnectInternal() {
         logger.info("Disconnecting Realtime translation socket")
+        sessionClosedWaiter?.resume(throwing: CancellationError())
+        sessionClosedWaiter = nil
+        isClosingTranslationSession = false
         receiveTask?.cancel()
         receiveTask = nil
         socket?.cancel(with: .normalClosure, reason: Data("Stopped".utf8))
         socket = nil
         eventContinuation?.finish()
         eventContinuation = nil
+    }
+
+    private func closeTranslationSessionIfPossible() async {
+        guard let socket, !isClosingTranslationSession else { return }
+
+        isClosingTranslationSession = true
+        let waiter = OneShotVoidContinuation()
+        sessionClosedWaiter = waiter
+
+        do {
+            try await socket.send(.string(RealtimeTranslationRequestBuilder.sessionCloseEvent()))
+            logger.info("Sent Realtime translation session close")
+            try await waitForSessionClosed(waiter)
+            logger.info("Realtime translation session closed")
+        } catch is CancellationError {
+        } catch {
+            logger.debug("Realtime translation session close did not complete before socket shutdown: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func sendText(_ text: String) async throws {
@@ -167,11 +194,25 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
                 case .string(let text):
                     let event = RealtimeTranslationEventParser.parse(text)
                     logReceivedEvent(event)
+                    if case .sessionClosed = event {
+                        sessionClosedWaiter?.resume()
+                        sessionClosedWaiter = nil
+                        continuation.yield(event)
+                        continuation.finish()
+                        return
+                    }
                     continuation.yield(event)
                 case .data(let data):
                     if let text = String(data: data, encoding: .utf8) {
                         let event = RealtimeTranslationEventParser.parse(text)
                         logReceivedEvent(event)
+                        if case .sessionClosed = event {
+                            sessionClosedWaiter?.resume()
+                            sessionClosedWaiter = nil
+                            continuation.yield(event)
+                            continuation.finish()
+                            return
+                        }
                         continuation.yield(event)
                     }
                 @unknown default:
@@ -197,6 +238,19 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
         continuation.finish()
     }
 
+    private func waitForSessionClosed(_ waiter: OneShotVoidContinuation) async throws {
+        guard closeTimeoutNanoseconds > 0 else { return }
+
+        let timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: closeTimeoutNanoseconds)
+            waiter.resume(throwing: RealtimeTranslationClientError.closeTimedOut)
+        }
+
+        defer { timeoutTask.cancel() }
+
+        try await waiter.wait()
+    }
+
     private func logReceivedEvent(_ event: RealtimeTranslationEvent) {
         switch event {
         case .outputAudio(let pcm):
@@ -207,6 +261,8 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
             logger.debug("Received output transcript delta")
         case .error(let message):
             logger.error("Realtime translation error event: \(message, privacy: .public)")
+        case .sessionClosed:
+            logger.debug("Received translation session closed")
         case .ignored:
             break
         }
@@ -349,6 +405,7 @@ final class OneShotVoidContinuation: @unchecked Sendable {
 
 enum RealtimeTranslationClientError: LocalizedError, Sendable {
     case openTimedOut
+    case closeTimedOut
     case closedBeforeOpen(String)
 
     var errorDescription: String? {
@@ -357,6 +414,11 @@ enum RealtimeTranslationClientError: LocalizedError, Sendable {
             return L10n.string(
                 "error.realtimeSocketTimedOut",
                 defaultValue: "Realtime translation socket did not open in time. Check the network and try again."
+            )
+        case .closeTimedOut:
+            return L10n.string(
+                "error.realtimeSocketCloseTimedOut",
+                defaultValue: "Realtime translation session did not close before the socket timeout."
             )
         case .closedBeforeOpen(let message):
             return message.isEmpty

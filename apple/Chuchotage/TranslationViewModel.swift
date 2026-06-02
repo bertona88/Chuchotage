@@ -14,6 +14,10 @@ final class TranslationViewModel: ObservableObject {
     @Published private(set) var credentialErrorMessage: String?
     @Published private(set) var isCredentialBusy = false
     @Published private(set) var chatGPTSignInStatusMessage: String?
+    #if os(macOS)
+    @Published private(set) var macCaptureSourceOptions: [MacCaptureSource] = [.systemAudio, .microphone]
+    @Published private(set) var macOutputDeviceOptions: [MacOutputDeviceSelection] = [.systemDefault]
+    #endif
     @Published var settings: TranslationSettings {
         didSet {
             settingsStore.save(settings)
@@ -48,6 +52,9 @@ final class TranslationViewModel: ObservableObject {
         self.settings = settingsStore.read()
         observeRuntimeEvents()
         refreshCredentialStatus()
+        #if os(macOS)
+        refreshMacAudioRoutingOptions()
+        #endif
     }
 
     var isTranslating: Bool {
@@ -83,15 +90,23 @@ final class TranslationViewModel: ObservableObject {
                 )
             }
             if hasCapturedAudio {
+                #if os(macOS)
+                return settings.macCaptureSource.listeningDescription
+                #else
                 return L10n.string(
                     "status.guidance.audioHeard",
                     defaultValue: "Audio heard. Waiting for translation."
                 )
+                #endif
             }
+            #if os(macOS)
+            return settings.macCaptureSource.listeningDescription
+            #else
             return L10n.string(
                 "status.guidance.listening",
                 defaultValue: "Listening now. Start speaking."
             )
+            #endif
         case .error:
             return L10n.string(
                 "status.guidance.error",
@@ -128,9 +143,27 @@ final class TranslationViewModel: ObservableObject {
         settings.targetLanguage
     }
 
+    var conversationLocalLanguage: TranslationLanguage {
+        settings.conversationLocalLanguage
+    }
+
+    var conversationPartnerLanguage: TranslationLanguage {
+        settings.conversationPartnerLanguage
+    }
+
     var targetLanguageCode: String {
         get { settings.targetLanguageCode }
         set { settings.targetLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(newValue) }
+    }
+
+    var conversationLocalLanguageCode: String {
+        get { settings.conversationLocalLanguageCode }
+        set { settings.conversationLocalLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(newValue) }
+    }
+
+    var conversationPartnerLanguageCode: String {
+        get { settings.conversationPartnerLanguageCode }
+        set { settings.conversationPartnerLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(newValue) }
     }
 
     var microphoneSource: AudioInputSource {
@@ -146,6 +179,21 @@ final class TranslationViewModel: ObservableObject {
     var macAudioBlendPercent: Int {
         get { settings.macAudioBlendPercent }
         set { settings.macAudioBlendPercent = MacAudioBlend.clampPercent(newValue) }
+    }
+
+    var macCaptureSource: MacCaptureSource {
+        get { settings.macCaptureSource }
+        set { settings.macCaptureSource = newValue }
+    }
+
+    var macOriginalAudioMode: MacOriginalAudioMode {
+        get { settings.macOriginalAudioMode }
+        set { settings.macOriginalAudioMode = newValue }
+    }
+
+    var macOutputDeviceSelection: MacOutputDeviceSelection {
+        get { settings.macOutputDeviceSelection }
+        set { settings.macOutputDeviceSelection = newValue }
     }
 
     var canImportCodexCredential: Bool {
@@ -180,10 +228,42 @@ final class TranslationViewModel: ObservableObject {
     }
 
     func stopTranslationFromSettings() {
+        stopTranslationSession()
+    }
+
+    func stopTranslationSession() {
         Task {
             await stopTranslation()
         }
     }
+
+    func startConversationTurn(targetLanguageCode: String) {
+        Task {
+            await startTranslation(targetLanguageCode: targetLanguageCode, restartIfNeeded: true)
+        }
+    }
+
+    #if os(macOS)
+    func refreshMacAudioRoutingOptions() {
+        var sources: [MacCaptureSource] = [.systemAudio]
+        let appSources = MacAudioProcessCatalog.activeOutputApps().map {
+            MacCaptureSource.selectedApp(bundleID: $0.bundleID, displayName: $0.displayName)
+        }
+        sources.append(contentsOf: appSources)
+        sources.append(.microphone)
+        if !sources.contains(settings.macCaptureSource) {
+            sources.insert(settings.macCaptureSource, at: min(1, sources.count))
+        }
+        macCaptureSourceOptions = sources
+
+        var outputSelections: [MacOutputDeviceSelection] = [.systemDefault]
+        outputSelections.append(contentsOf: MacAudioOutputDeviceManager.outputDevices().map(\.selection))
+        if !outputSelections.contains(settings.macOutputDeviceSelection) {
+            outputSelections.append(settings.macOutputDeviceSelection)
+        }
+        macOutputDeviceOptions = outputSelections
+    }
+    #endif
 
     func saveApiKeyCredential(_ value: String) {
         let normalized = OpenAICredentialValidator.normalize(value)
@@ -341,11 +421,23 @@ final class TranslationViewModel: ObservableObject {
         return UUID().uuidString.lowercased()
     }
 
-    private func startTranslation() async {
+    private func startTranslation(
+        targetLanguageCode: String? = nil,
+        restartIfNeeded: Bool = false
+    ) async {
+        if isTranslating {
+            guard restartIfNeeded else { return }
+            await stopTranslation()
+        }
+
         lastErrorMessage = nil
         inputVolume = 0
         resetSessionActivity()
         acceptsRuntimeActivity = true
+        var sessionSettings = settings
+        if let targetLanguageCode {
+            sessionSettings.targetLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(targetLanguageCode)
+        }
 
         guard let runtime else {
             acceptsRuntimeActivity = false
@@ -359,7 +451,7 @@ final class TranslationViewModel: ObservableObject {
         }
 
         do {
-            try await runtime.start(settings: settings)
+            try await runtime.start(settings: sessionSettings)
         } catch {
             acceptsRuntimeActivity = false
             handleError(error.localizedDescription)

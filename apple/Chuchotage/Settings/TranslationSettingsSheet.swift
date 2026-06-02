@@ -9,7 +9,9 @@ struct TranslationSettingsSheet: View {
         MacOSSettingsView(
             viewModel: viewModel,
             targetLanguageSelection: targetLanguageSelection,
-            macAudioBlendSelection: macAudioBlendSelection,
+            macCaptureSourceSelection: macCaptureSourceSelection,
+            macOriginalAudioModeSelection: macOriginalAudioModeSelection,
+            macOutputDeviceSelection: macOutputDeviceSelection,
             doneAction: { dismiss() }
         )
         #else
@@ -179,6 +181,27 @@ struct TranslationSettingsSheet: View {
             set: { viewModel.macAudioBlendPercent = Int($0.rounded()) }
         )
     }
+
+    private var macCaptureSourceSelection: Binding<MacCaptureSource> {
+        Binding(
+            get: { viewModel.macCaptureSource },
+            set: { viewModel.macCaptureSource = $0 }
+        )
+    }
+
+    private var macOriginalAudioModeSelection: Binding<MacOriginalAudioMode> {
+        Binding(
+            get: { viewModel.macOriginalAudioMode },
+            set: { viewModel.macOriginalAudioMode = $0 }
+        )
+    }
+
+    private var macOutputDeviceSelection: Binding<MacOutputDeviceSelection> {
+        Binding(
+            get: { viewModel.macOutputDeviceSelection },
+            set: { viewModel.macOutputDeviceSelection = $0 }
+        )
+    }
 }
 
 #Preview {
@@ -189,12 +212,10 @@ struct TranslationSettingsSheet: View {
 private struct MacOSSettingsView: View {
     @ObservedObject var viewModel: TranslationViewModel
     let targetLanguageSelection: Binding<String>
-    let macAudioBlendSelection: Binding<Double>
+    let macCaptureSourceSelection: Binding<MacCaptureSource>
+    let macOriginalAudioModeSelection: Binding<MacOriginalAudioMode>
+    let macOutputDeviceSelection: Binding<MacOutputDeviceSelection>
     let doneAction: () -> Void
-
-    private var originalPercent: Int {
-        100 - viewModel.macAudioBlendPercent
-    }
 
     var body: some View {
         ZStack {
@@ -221,7 +242,9 @@ private struct MacOSSettingsView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         languagePanel
-                        blendPanel
+                        sourcePanel
+                        originalAudioPanel
+                        outputPanel
                         routingPanel
                         credentialPanel
                         settingsFootnote
@@ -232,6 +255,9 @@ private struct MacOSSettingsView: View {
             }
         }
         .frame(minWidth: 640, idealWidth: 700, maxWidth: 760, minHeight: 650)
+        .onAppear {
+            viewModel.refreshMacAudioRoutingOptions()
+        }
     }
 
     private var header: some View {
@@ -332,50 +358,143 @@ private struct MacOSSettingsView: View {
         }
     }
 
-    private var blendPanel: some View {
+    private var sourcePanel: some View {
         MacSettingsPanel(
-            iconName: "slider.horizontal.3",
-            title: L10n.string("settings.audioBlend", defaultValue: "Audio blend"),
+            iconName: "waveform.and.magnifyingglass",
+            title: L10n.string("settings.macSource", defaultValue: "Source"),
             subtitle: L10n.string(
-                "settings.audioBlend.subtitle",
-                defaultValue: "Balance original Mac audio against translated speech."
+                "settings.macSource.subtitle",
+                defaultValue: "Choose what Chuchotage listens to."
             ),
             tint: ChuchotageColor.signalBlueSoft
         ) {
-            HStack(spacing: 14) {
-                MacBlendMetric(
-                    title: L10n.string("audio.original", defaultValue: "Original"),
-                    value: "\(originalPercent)%",
-                    iconName: "speaker.wave.1.fill",
-                    tint: ChuchotageColor.muted
-                )
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(viewModel.macCaptureSource.title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(ChuchotageColor.text)
 
-                MacBlendMetric(
-                    title: L10n.string("audio.translation", defaultValue: "Translation"),
-                    value: "\(viewModel.macAudioBlendPercent)%",
-                    iconName: "speaker.wave.2.fill",
-                    tint: ChuchotageColor.signalBlueSoft
-                )
+                    Text(viewModel.macCaptureSource.detail)
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(ChuchotageColor.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 16)
+
+                Picker(L10n.string("settings.macSource", defaultValue: "Source"), selection: macCaptureSourceSelection) {
+                    ForEach(viewModel.macCaptureSourceOptions) { source in
+                        Text(source.title).tag(source)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(width: 240)
+                .disabled(viewModel.isTranslating)
             }
 
-            MacBlendBar(translationPercent: viewModel.macAudioBlendPercent)
+            HStack(spacing: 10) {
+                Button {
+                    viewModel.refreshMacAudioRoutingOptions()
+                } label: {
+                    Label(
+                        L10n.string("settings.refreshAudioSources", defaultValue: "Refresh"),
+                        systemImage: "arrow.clockwise"
+                    )
+                }
+                .buttonStyle(.bordered)
+                .disabled(viewModel.isTranslating)
 
-            Slider(value: macAudioBlendSelection, in: 0...100, step: 1) {
-                Text(l10n: "settings.originalToTranslation", defaultValue: "Original to Translation")
-            } minimumValueLabel: {
-                Text(l10n: "audio.original", defaultValue: "Original")
-            } maximumValueLabel: {
-                Text(l10n: "audio.translation", defaultValue: "Translation")
+                if viewModel.isTranslating {
+                    MacInlineMessage(
+                        iconName: "lock.fill",
+                        text: L10n.string(
+                            "settings.stopToChangeSource",
+                            defaultValue: "Stop translation to change the source."
+                        ),
+                        tint: ChuchotageColor.cream
+                    )
+                }
             }
-            .tint(ChuchotageColor.signalBlueSoft)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
 
-            Text(
-                l10n: "settings.audioBlend.detail",
-                defaultValue: "While translating, Chuchotage mutes native Mac playback and re-adds the original at this blend level. You can adjust it live."
-            )
+    private var originalAudioPanel: some View {
+        MacSettingsPanel(
+            iconName: "speaker.wave.2.fill",
+            title: L10n.string("settings.originalAudio", defaultValue: "Original audio"),
+            subtitle: L10n.string(
+                "settings.originalAudio.subtitle",
+                defaultValue: "Choose how much source audio you hear while translated speech plays."
+            ),
+            tint: ChuchotageColor.signalBlueSoft
+        ) {
+            Picker(
+                L10n.string("settings.originalAudio", defaultValue: "Original audio"),
+                selection: macOriginalAudioModeSelection
+            ) {
+                ForEach(MacOriginalAudioMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Text(viewModel.macOriginalAudioMode.detail)
                 .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(ChuchotageColor.muted)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if viewModel.macOriginalAudioMode != .leaveAlone {
+                MacInlineMessage(
+                    iconName: "speaker.slash.fill",
+                    text: L10n.string(
+                        "settings.originalAudio.muteDetail",
+                        defaultValue: "Chuchotage asks macOS to mute the captured source while the tap is being read, then locally re-adds original audio only when Lower is selected."
+                    ),
+                    tint: ChuchotageColor.cream
+                )
+            }
+        }
+    }
+
+    private var outputPanel: some View {
+        MacSettingsPanel(
+            iconName: "headphones",
+            title: L10n.string("settings.output", defaultValue: "Output"),
+            subtitle: L10n.string(
+                "settings.output.subtitle.mac",
+                defaultValue: "Choose where translated speech plays."
+            ),
+            tint: ChuchotageColor.cream
+        ) {
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(viewModel.macOutputDeviceSelection.title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(ChuchotageColor.text)
+
+                    Text(
+                        l10n: "settings.output.detail.mac",
+                        defaultValue: "If this output disconnects during translation, Chuchotage stops cleanly so you can choose another device."
+                    )
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(ChuchotageColor.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 16)
+
+                Picker(L10n.string("settings.output", defaultValue: "Output"), selection: macOutputDeviceSelection) {
+                    ForEach(viewModel.macOutputDeviceOptions) { output in
+                        Text(output.title).tag(output)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(width: 240)
+                .disabled(viewModel.isTranslating)
+            }
         }
     }
 
@@ -392,11 +511,8 @@ private struct MacOSSettingsView: View {
             MacSettingsRow(
                 iconName: "macbook.and.iphone",
                 title: L10n.string("settings.listeningTo", defaultValue: "Listening to"),
-                value: L10n.string("settings.macPlaybackAudio", defaultValue: "Mac playback audio"),
-                detail: L10n.string(
-                    "settings.macPlaybackAudio.detail",
-                    defaultValue: "Browser, meeting, and app audio that macOS allows Chuchotage to capture."
-                ),
+                value: viewModel.macCaptureSource.title,
+                detail: viewModel.macCaptureSource.detail,
                 tint: ChuchotageColor.signalBlueSoft
             )
 
@@ -405,10 +521,10 @@ private struct MacOSSettingsView: View {
             MacSettingsRow(
                 iconName: "headphones",
                 title: L10n.string("settings.translationPlaysTo", defaultValue: "Translation plays to"),
-                value: L10n.string("settings.currentMacOutput", defaultValue: "Current Mac sound output"),
+                value: viewModel.macOutputDeviceSelection.title,
                 detail: L10n.string(
                     "settings.currentMacOutput.detail",
-                    defaultValue: "Choose headphones or speakers in macOS Sound settings."
+                    defaultValue: "Choose headphones or speakers here, or leave System default selected."
                 ),
                 tint: ChuchotageColor.cream
             )

@@ -84,6 +84,37 @@ final class TranslationViewModelTests: XCTestCase {
         await runtime.stop()
     }
 
+    func testConversationTurnStartsRuntimeWithSelectedTargetLanguageWithoutChangingDefaultTarget() async throws {
+        let credentialStore = InMemoryCredentialStore(
+            initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
+        )
+        let realtimeClient = ViewModelFakeRealtimeTranslationClient()
+        let runtime = TranslationRuntime(
+            credentialStore: credentialStore,
+            audioIO: ViewModelFakeTranslationAudioIO(),
+            realtimeClient: realtimeClient
+        )
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(
+                settings: TranslationSettings(
+                    targetLanguageCode: "en",
+                    conversationLocalLanguageCode: "en",
+                    conversationPartnerLanguageCode: "it"
+                )
+            ),
+            credentialStore: credentialStore,
+            runtime: runtime
+        )
+
+        viewModel.startConversationTurn(targetLanguageCode: "it")
+        try await waitForStatus(.listening, on: viewModel)
+
+        let lastTargetLanguageCode = await realtimeClient.connectedTargetLanguageCode()
+        XCTAssertEqual(lastTargetLanguageCode, "it")
+        XCTAssertEqual(viewModel.targetLanguageCode, "en")
+        await runtime.stop()
+    }
+
     func testRuntimeErrorUpdatesErrorMessage() async throws {
         let credentialStore = InMemoryCredentialStore(
             initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
@@ -125,7 +156,11 @@ final class TranslationViewModelTests: XCTestCase {
 
         viewModel.status = .listening
         XCTAssertEqual(viewModel.statusTitle, "Listening")
+        #if os(macOS)
+        XCTAssertEqual(viewModel.sessionGuidanceMessage, "Listening to Mac audio.")
+        #else
         XCTAssertEqual(viewModel.sessionGuidanceMessage, "Listening now. Start speaking.")
+        #endif
     }
 
     #if os(iOS)
@@ -346,6 +381,7 @@ private final class ViewModelFakeTranslationAudioIO: TranslationAudioIO, @unchec
 
 private actor ViewModelFakeRealtimeTranslationClient: RealtimeTranslationClienting {
     private var continuation: AsyncStream<RealtimeTranslationEvent>.Continuation?
+    private(set) var lastTargetLanguageCode: String?
 
     func connect(
         bearerToken: RealtimeTranslationSessionToken,
@@ -353,6 +389,7 @@ private actor ViewModelFakeRealtimeTranslationClient: RealtimeTranslationClienti
     ) async throws -> AsyncStream<RealtimeTranslationEvent> {
         let streamPair = AsyncStream.makeStream(of: RealtimeTranslationEvent.self)
         continuation = streamPair.continuation
+        lastTargetLanguageCode = targetLanguageCode
         return streamPair.stream
     }
 
@@ -365,5 +402,9 @@ private actor ViewModelFakeRealtimeTranslationClient: RealtimeTranslationClienti
 
     func emit(_ event: RealtimeTranslationEvent) {
         continuation?.yield(event)
+    }
+
+    func connectedTargetLanguageCode() -> String? {
+        lastTargetLanguageCode
     }
 }

@@ -21,6 +21,8 @@
 		3036AFF548281A0AADFAC8E1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 56616369E6C3DC02FC80A5E7 /* InfoPlist.strings */; };
 		3750FF29B737D5C321760AF5 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE7A2AE61A949B84BA6AE94C /* Localization.swift */; };
 		3D4C018C1D70E88F8E546FA3 /* PcmAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14566A2DEB07861C665C08E8 /* PcmAudio.swift */; };
+		3FA5EECDD0D6E96474EE9D38 /* MacAudioDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3CA555B4B2D0D0B33C1165 /* MacAudioDevices.swift */; };
+		40B899ECAA0CE30BFB9BAE37 /* MacAudioDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3CA555B4B2D0D0B33C1165 /* MacAudioDevices.swift */; };
 		41203B897954E9EDC196819C /* TranslationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE6703AD836B99B625ED078 /* TranslationViewModelTests.swift */; };
 		4234F2FCB0A3B2217A0E6F72 /* CodexAuthCredentialImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8976FA01EF877C3DD508BA1 /* CodexAuthCredentialImporter.swift */; };
 		474887EB695B891E561D1FF3 /* CodexAuthCredentialImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8976FA01EF877C3DD508BA1 /* CodexAuthCredentialImporter.swift */; };
@@ -117,6 +119,7 @@
 		90DDA06A0BDF3DF0BF1B933B /* Chuchotage Shared Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Chuchotage Shared Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9122923AAC9D4C8CAD2935B5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		9A49A61D763137C7400D6728 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = vi.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9D3CA555B4B2D0D0B33C1165 /* MacAudioDevices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAudioDevices.swift; sourceTree = "<group>"; };
 		A05BB585A70B01ADBBED965D /* TranslationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationState.swift; sourceTree = "<group>"; };
 		ACAA534AE64269A51CDE2B4C /* hi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hi; path = hi.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B0B491799992F73A8B055D78 /* Chuchotage macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Chuchotage macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -206,6 +209,7 @@
 			isa = PBXGroup;
 			children = (
 				4FE0AED5101FD8320621AFA7 /* IOSTranslationAudioIO.swift */,
+				9D3CA555B4B2D0D0B33C1165 /* MacAudioDevices.swift */,
 				1E84670A7E1D29B4B330F7DA /* MacOSTranslationAudioIO.swift */,
 				14566A2DEB07861C665C08E8 /* PcmAudio.swift */,
 				70189DC644BFFFD731FA1579 /* TranslationAudioIO.swift */,
@@ -401,6 +405,7 @@
 				C5A1804FB041FCEB009E4907 /* IOSTranslationAudioIO.swift in Sources */,
 				0239337F0B6F07CF179000DA /* KeychainOpenAICredentialStore.swift in Sources */,
 				E16CC1A3ECF30F77F12E4A71 /* Localization.swift in Sources */,
+				40B899ECAA0CE30BFB9BAE37 /* MacAudioDevices.swift in Sources */,
 				B9B4BB4B3571F87AB44DD63C /* MacOSTranslationAudioIO.swift in Sources */,
 				19B495A43CFB89639C0C5D15 /* OpenAICredential.swift in Sources */,
 				3D4C018C1D70E88F8E546FA3 /* PcmAudio.swift in Sources */,
@@ -443,6 +448,7 @@
 				BB37E7DF9F82734E40CCDC96 /* IOSTranslationAudioIO.swift in Sources */,
 				A1B36C2B61811EE9C9AF5961 /* KeychainOpenAICredentialStore.swift in Sources */,
 				3750FF29B737D5C321760AF5 /* Localization.swift in Sources */,
+				3FA5EECDD0D6E96474EE9D38 /* MacAudioDevices.swift in Sources */,
 				158298D4AC56E2D0FB231ECD /* MacOSTranslationAudioIO.swift in Sources */,
 				CA94BCBB135DAA75DCE22219 /* OpenAICredential.swift in Sources */,
 				933B06FB2E3A667A13E7D105 /* PcmAudio.swift in Sources */,

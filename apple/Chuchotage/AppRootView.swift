@@ -3,6 +3,9 @@ import SwiftUI
 struct AppRootView: View {
     @ObservedObject var viewModel: TranslationViewModel
     @State private var isShowingSettings = false
+    #if os(iOS)
+    @State private var selectedIOSSurfaceTab: IOSSurfaceTab = .translate
+    #endif
 
     var body: some View {
         GeometryReader { geometry in
@@ -77,6 +80,9 @@ struct AppRootView: View {
 
     private func usesScrollableIOSRoot(isCompactIOS: Bool) -> Bool {
         #if os(iOS)
+        if selectedIOSSurfaceTab == .conversation {
+            return isCompactIOS
+        }
         return isCompactIOS || viewModel.shouldShowTranscriptPanes
         #else
         return false
@@ -150,10 +156,15 @@ struct AppRootView: View {
     @ViewBuilder
     private func translationSurface(isCompactIOS: Bool) -> some View {
         #if os(iOS)
-        if isCompactIOS {
-            compactIOSTranslationSurface(isCompactIOS: isCompactIOS)
-        } else {
-            stackedTranslationSurface(isCompactIOS: isCompactIOS)
+        switch selectedIOSSurfaceTab {
+        case .translate:
+            if isCompactIOS {
+                compactIOSTranslationSurface(isCompactIOS: isCompactIOS)
+            } else {
+                stackedTranslationSurface(isCompactIOS: isCompactIOS)
+            }
+        case .conversation:
+            IOSConversationSurface(viewModel: viewModel, isCompact: isCompactIOS)
         }
         #else
         stackedTranslationSurface(isCompactIOS: isCompactIOS)
@@ -186,7 +197,9 @@ struct AppRootView: View {
                 hasReceivedTranslation: viewModel.hasReceivedTranslation,
                 latestInputTranscript: viewModel.latestInputTranscript,
                 latestOutputTranscript: viewModel.latestOutputTranscript,
-                macAudioBlendPercent: viewModel.macAudioBlendPercent
+                macCaptureSource: viewModel.macCaptureSource,
+                macOriginalAudioMode: viewModel.macOriginalAudioMode,
+                macOutputDeviceSelection: viewModel.macOutputDeviceSelection
             )
             #endif
         }
@@ -329,16 +342,75 @@ struct AppRootView: View {
                 .font(headerTitleFont)
                 .foregroundStyle(ChuchotageColor.text)
 
-            Text(
-                L10n.format(
-                    "header.translateTo",
-                    defaultValue: "Translate to %@",
-                    viewModel.targetLanguage.name
-                )
-            )
-                .font(headerSubtitleFont)
-                .foregroundStyle(ChuchotageColor.signalBlueSoft)
+            targetLanguageHeaderSubtitle
         }
+    }
+
+    @ViewBuilder
+    private var targetLanguageHeaderSubtitle: some View {
+        #if os(iOS)
+        if selectedIOSSurfaceTab == .conversation {
+            conversationHeaderSubtitleText
+        } else {
+            Menu {
+                if viewModel.isTranslating {
+                    Button(
+                        L10n.string(
+                            "settings.stopToChangeTargetLanguage",
+                            defaultValue: "Stop translation to change the target language."
+                        )
+                    ) {}
+                        .disabled(true)
+                } else {
+                    ForEach(TranslationLanguages.supportedOutputLanguages) { language in
+                        Button {
+                            viewModel.targetLanguageCode = language.code
+                        } label: {
+                            if language.code == viewModel.targetLanguageCode {
+                                Label(language.name, systemImage: "checkmark")
+                            } else {
+                                Text(language.name)
+                            }
+                        }
+                    }
+                }
+            } label: {
+                targetLanguageHeaderSubtitleText
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.string("settings.targetLanguage", defaultValue: "Target language"))
+            .accessibilityValue(viewModel.targetLanguage.name)
+        }
+        #else
+        targetLanguageHeaderSubtitleText
+        #endif
+    }
+
+    private var targetLanguageHeaderSubtitleText: some View {
+        Text(
+            L10n.format(
+                "header.translateTo",
+                defaultValue: "Translate to %@",
+                viewModel.targetLanguage.name
+            )
+        )
+        .font(headerSubtitleFont)
+        .foregroundStyle(ChuchotageColor.signalBlueSoft)
+    }
+
+    private var conversationHeaderSubtitleText: some View {
+        Text(
+            L10n.format(
+                "header.conversationLanguages",
+                defaultValue: "%@ <-> %@",
+                viewModel.conversationLocalLanguage.name,
+                viewModel.conversationPartnerLanguage.name
+            )
+        )
+        .font(headerSubtitleFont)
+        .foregroundStyle(ChuchotageColor.signalBlueSoft)
+        .lineLimit(1)
+        .minimumScaleFactor(0.78)
     }
 
     private var headerAlignment: HorizontalAlignment {
@@ -365,7 +437,20 @@ struct AppRootView: View {
         #endif
     }
 
+    @ViewBuilder
     private var footer: some View {
+        #if os(iOS)
+        if viewModel.hasCredential {
+            IOSBottomTabBar(selectedTab: $selectedIOSSurfaceTab)
+        } else {
+            statusFooter
+        }
+        #else
+        statusFooter
+        #endif
+    }
+
+    private var statusFooter: some View {
         HStack(spacing: 10) {
             Circle()
                 .fill(footerTint)
@@ -390,6 +475,563 @@ struct AppRootView: View {
         }
     }
 }
+
+#if os(iOS)
+private enum IOSSurfaceTab: String, CaseIterable, Identifiable {
+    case translate
+    case conversation
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .translate:
+            return L10n.string("bottom.translate", defaultValue: "Translate")
+        case .conversation:
+            return L10n.string("bottom.conversation", defaultValue: "Conversation")
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .translate:
+            return "waveform"
+        case .conversation:
+            return "person.2.fill"
+        }
+    }
+}
+
+private struct IOSBottomTabBar: View {
+    @Binding var selectedTab: IOSSurfaceTab
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(IOSSurfaceTab.allCases) { tab in
+                Button {
+                    selectedTab = tab
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: tab.iconName)
+                            .font(.system(size: 19, weight: .semibold))
+
+                        Text(tab.title)
+                            .font(.system(.caption2, design: .rounded, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
+                    }
+                    .foregroundStyle(selectedTab == tab ? ChuchotageColor.signalBlueSoft : ChuchotageColor.muted)
+                    .frame(maxWidth: .infinity, minHeight: 58)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tab.title)
+                .accessibilityAddTraits(selectedTab == tab ? .isSelected : [])
+            }
+        }
+        .background(ChuchotageColor.surface.opacity(0.92))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(ChuchotageColor.ring.opacity(0.62), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .frame(maxWidth: 460)
+    }
+}
+
+private enum IOSConversationSpeaker: Equatable {
+    case local
+    case partner
+
+    func targetLanguageCode(localLanguageCode: String, partnerLanguageCode: String) -> String {
+        switch self {
+        case .local:
+            return partnerLanguageCode
+        case .partner:
+            return localLanguageCode
+        }
+    }
+}
+
+private struct IOSConversationSurface: View {
+    @ObservedObject var viewModel: TranslationViewModel
+    let isCompact: Bool
+
+    @State private var activeSpeaker: IOSConversationSpeaker?
+    @State private var localTranscript = ""
+    @State private var partnerTranscript = ""
+    @State private var lastObservedOutputText = ""
+
+    private var localLanguage: TranslationLanguage {
+        viewModel.conversationLocalLanguage
+    }
+
+    private var partnerLanguage: TranslationLanguage {
+        viewModel.conversationPartnerLanguage
+    }
+
+    private var languagesConflict: Bool {
+        localLanguage.code == partnerLanguage.code
+    }
+
+    var body: some View {
+        VStack(spacing: isCompact ? 8 : 10) {
+            IOSConversationTranscriptPanel(
+                label: L10n.string("conversation.partner.label", defaultValue: "Other side"),
+                language: partnerLanguage,
+                text: partnerTranscript,
+                active: activeSpeaker == .partner && viewModel.isTranslating,
+                receiving: activeSpeaker == .local && viewModel.isTranslating,
+                languageConflict: languagesConflict,
+                placeholder: conversationPlaceholder,
+                accent: ChuchotageColor.cream,
+                inputVolume: viewModel.inputVolume,
+                status: viewModel.status,
+                isCompact: isCompact,
+                onLanguageSelected: { updateConversationLanguages(nextPartnerLanguage: $0) },
+                onTap: {
+                    selectSpeaker(.partner, targetLanguageCode: localLanguage.code)
+                }
+            )
+            .frame(height: panelHeight)
+            .rotationEffect(.degrees(180))
+
+            IOSConversationCenterLine(
+                status: viewModel.status,
+                activeSpeaker: activeSpeaker,
+                localLanguageName: localLanguage.name,
+                partnerLanguageName: partnerLanguage.name,
+                languagesConflict: languagesConflict,
+                onStopTranslation: viewModel.stopTranslationSession,
+                isCompact: isCompact
+            )
+
+            IOSConversationTranscriptPanel(
+                label: L10n.string("conversation.local.label", defaultValue: "This side"),
+                language: localLanguage,
+                text: localTranscript,
+                active: activeSpeaker == .local && viewModel.isTranslating,
+                receiving: activeSpeaker == .partner && viewModel.isTranslating,
+                languageConflict: languagesConflict,
+                placeholder: conversationPlaceholder,
+                accent: ChuchotageColor.signalBlueSoft,
+                inputVolume: viewModel.inputVolume,
+                status: viewModel.status,
+                isCompact: isCompact,
+                onLanguageSelected: { updateConversationLanguages(nextLocalLanguage: $0) },
+                onTap: {
+                    selectSpeaker(.local, targetLanguageCode: partnerLanguage.code)
+                }
+            )
+            .frame(height: panelHeight)
+        }
+        .frame(maxWidth: 460)
+        .onChange(of: viewModel.isTranslating) {
+            if !viewModel.isTranslating {
+                activeSpeaker = nil
+                lastObservedOutputText = ""
+            }
+        }
+        .onChange(of: activeSpeaker) {
+            lastObservedOutputText = viewModel.latestOutputTranscript
+        }
+        .onChange(of: viewModel.latestOutputTranscript) {
+            routeOutputTranscriptDelta()
+        }
+    }
+
+    private var panelHeight: CGFloat {
+        isCompact ? 132 : 222
+    }
+
+    private var conversationPlaceholder: String {
+        languagesConflict
+            ? L10n.string("conversation.chooseLanguages", defaultValue: "Choose two different languages.")
+            : L10n.string("conversation.waiting", defaultValue: "Translated text appears here.")
+    }
+
+    private func selectSpeaker(_ speaker: IOSConversationSpeaker, targetLanguageCode: String) {
+        guard !languagesConflict else { return }
+        activeSpeaker = speaker
+        lastObservedOutputText = viewModel.latestOutputTranscript
+        viewModel.startConversationTurn(targetLanguageCode: targetLanguageCode)
+    }
+
+    private func updateConversationLanguages(
+        nextLocalLanguage: TranslationLanguage? = nil,
+        nextPartnerLanguage: TranslationLanguage? = nil
+    ) {
+        let local = nextLocalLanguage ?? localLanguage
+        let partner = nextPartnerLanguage ?? partnerLanguage
+        viewModel.conversationLocalLanguageCode = local.code
+        viewModel.conversationPartnerLanguageCode = partner.code
+
+        if local.code == partner.code {
+            if viewModel.isTranslating {
+                viewModel.stopTranslationSession()
+            }
+            return
+        }
+
+        guard let activeSpeaker, viewModel.isTranslating else { return }
+        lastObservedOutputText = viewModel.latestOutputTranscript
+        viewModel.startConversationTurn(
+            targetLanguageCode: activeSpeaker.targetLanguageCode(
+                localLanguageCode: local.code,
+                partnerLanguageCode: partner.code
+            )
+        )
+    }
+
+    private func routeOutputTranscriptDelta() {
+        guard let activeSpeaker else { return }
+        let outputText = viewModel.latestOutputTranscript
+        let delta = outputText.conversationDelta(since: lastObservedOutputText)
+        lastObservedOutputText = outputText
+        guard !delta.isConversationBlank else { return }
+
+        switch activeSpeaker {
+        case .local:
+            partnerTranscript = partnerTranscript.appendingConversationText(delta)
+        case .partner:
+            localTranscript = localTranscript.appendingConversationText(delta)
+        }
+    }
+}
+
+private struct IOSConversationTranscriptPanel: View {
+    private static let bottomID = "ios-conversation-transcript-bottom"
+
+    let label: String
+    let language: TranslationLanguage
+    let text: String
+    let active: Bool
+    let receiving: Bool
+    let languageConflict: Bool
+    let placeholder: String
+    let accent: Color
+    let inputVolume: Double
+    let status: TranslationStatus
+    let isCompact: Bool
+    let onLanguageSelected: (TranslationLanguage) -> Void
+    let onTap: () -> Void
+
+    private var borderColor: Color {
+        if active {
+            return accent
+        }
+        if receiving {
+            return ChuchotageColor.signalBlue
+        }
+        if languageConflict {
+            return ChuchotageColor.cream.opacity(0.78)
+        }
+        return ChuchotageColor.ring.opacity(0.78)
+    }
+
+    private var statusText: String {
+        if active {
+            return L10n.string("conversation.speaking", defaultValue: "Speaking into the mic")
+        }
+        if receiving {
+            return L10n.string("conversation.reading", defaultValue: "Translation arrives here")
+        }
+        return L10n.string("conversation.tapToSpeak", defaultValue: "Tap your side when you speak")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: isCompact ? 6 : 8) {
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label)
+                        .font(.system(.caption2, design: .rounded, weight: .bold))
+                        .foregroundStyle(accent)
+                        .lineLimit(1)
+
+                    Text(statusText)
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(active || receiving ? ChuchotageColor.text : ChuchotageColor.muted)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                }
+
+                Spacer(minLength: 8)
+
+                IOSConversationLanguageMenu(
+                    selectedLanguage: language,
+                    accent: accent,
+                    onSelected: onLanguageSelected
+                )
+            }
+
+            if active {
+                IOSConversationWaveform(
+                    level: inputVolume,
+                    status: status,
+                    accent: accent
+                )
+                .frame(height: isCompact ? 18 : 24)
+            }
+
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(text.isEmpty ? placeholder : text)
+                            .foregroundStyle(text.isEmpty ? placeholderColor : ChuchotageColor.text)
+                            .font(.system(isCompact ? .subheadline : .body, design: .rounded, weight: .semibold))
+                            .textSelection(.enabled)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 9)
+                            .frame(maxWidth: .infinity, alignment: text.isEmpty ? .center : .leading)
+
+                        Color.clear
+                            .frame(height: 1)
+                            .id(Self.bottomID)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: scrollMinHeight, alignment: text.isEmpty ? .center : .topLeading)
+                }
+                .background(ChuchotageColor.ink.opacity(0.38))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .onAppear {
+                    scrollToBottom(with: proxy, animated: false)
+                }
+                .onChange(of: text) {
+                    scrollToBottom(with: proxy, animated: true)
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, isCompact ? 10 : 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(active ? ChuchotageColor.surfaceRaised.opacity(0.82) : ChuchotageColor.inkDeep.opacity(0.74))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(borderColor, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .onTapGesture {
+            guard !languageConflict else { return }
+            onTap()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
+        .accessibilityValue(text.isEmpty ? placeholder : text)
+    }
+
+    private var placeholderColor: Color {
+        languageConflict ? ChuchotageColor.cream : ChuchotageColor.muted
+    }
+
+    private var scrollMinHeight: CGFloat {
+        isCompact ? 44 : 88
+    }
+
+    private func scrollToBottom(with proxy: ScrollViewProxy, animated: Bool) {
+        guard !text.isEmpty else { return }
+
+        if animated {
+            withAnimation(.easeOut(duration: 0.16)) {
+                proxy.scrollTo(Self.bottomID, anchor: .bottom)
+            }
+        } else {
+            proxy.scrollTo(Self.bottomID, anchor: .bottom)
+        }
+    }
+}
+
+private struct IOSConversationLanguageMenu: View {
+    let selectedLanguage: TranslationLanguage
+    let accent: Color
+    let onSelected: (TranslationLanguage) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(TranslationLanguages.supportedOutputLanguages) { language in
+                Button {
+                    onSelected(language)
+                } label: {
+                    if language.code == selectedLanguage.code {
+                        Label(language.name, systemImage: "checkmark")
+                    } else {
+                        Text(language.name)
+                    }
+                }
+            }
+        } label: {
+            Text(selectedLanguage.name)
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .foregroundStyle(ChuchotageColor.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .padding(.horizontal, 11)
+                .frame(height: 34)
+                .background(ChuchotageColor.surface.opacity(0.62))
+                .overlay(
+                    Capsule()
+                        .stroke(accent.opacity(0.58), lineWidth: 1)
+                )
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.string("settings.targetLanguage", defaultValue: "Target language"))
+        .accessibilityValue(selectedLanguage.name)
+    }
+}
+
+private struct IOSConversationCenterLine: View {
+    let status: TranslationStatus
+    let activeSpeaker: IOSConversationSpeaker?
+    let localLanguageName: String
+    let partnerLanguageName: String
+    let languagesConflict: Bool
+    let onStopTranslation: () -> Void
+    let isCompact: Bool
+
+    private var isRunning: Bool {
+        status == .connecting || status == .listening
+    }
+
+    private var routeText: String {
+        if languagesConflict {
+            return L10n.string("conversation.chooseLanguages", defaultValue: "Choose two different languages.")
+        }
+        if activeSpeaker == .local && isRunning {
+            return L10n.format("conversation.route", defaultValue: "%@ -> %@", localLanguageName, partnerLanguageName)
+        }
+        if activeSpeaker == .partner && isRunning {
+            return L10n.format("conversation.route", defaultValue: "%@ -> %@", partnerLanguageName, localLanguageName)
+        }
+        return L10n.string("conversation.tapToSpeak", defaultValue: "Tap your side when you speak")
+    }
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(ChuchotageColor.ring.opacity(0.8))
+                .frame(height: 1)
+
+            HStack(spacing: 10) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(isRunning ? ChuchotageColor.signalBlueSoft : ChuchotageColor.muted)
+                    .frame(width: 28, height: 28)
+
+                Text(routeText)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(languagesConflict ? ChuchotageColor.cream : ChuchotageColor.text)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.78)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+
+                if isRunning {
+                    Button(role: .destructive, action: onStopTranslation) {
+                        Text(L10n.string("translation.stopShort", defaultValue: "Stop"))
+                            .font(.system(.caption, design: .rounded, weight: .bold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(ChuchotageColor.cream)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(ChuchotageColor.inkDeep)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(ChuchotageColor.ring.opacity(0.82), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .frame(height: isCompact ? 54 : 64)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct IOSConversationWaveform: View {
+    let level: Double
+    let status: TranslationStatus
+    let accent: Color
+
+    private var visibleLevel: Double {
+        status == .listening ? min(max(level, 0), 1) : 0
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            HStack(alignment: .center, spacing: 3) {
+                ForEach(0..<19, id: \.self) { index in
+                    Capsule()
+                        .fill(barFill)
+                        .frame(
+                            width: 3,
+                            height: max(5, geometry.size.height * barHeightFraction(at: index))
+                        )
+                        .opacity(barOpacity)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+        .animation(.easeOut(duration: 0.09), value: visibleLevel)
+        .accessibilityHidden(true)
+    }
+
+    private var barFill: AnyShapeStyle {
+        if visibleLevel >= 0.08 {
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [accent, ChuchotageColor.signalBlueSoft],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
+        return AnyShapeStyle(ChuchotageColor.ring)
+    }
+
+    private var barOpacity: Double {
+        visibleLevel >= 0.08 ? 0.86 : 0.26
+    }
+
+    private func barHeightFraction(at index: Int) -> Double {
+        let midpoint = 9.0
+        let distanceFromCenter = abs(Double(index) - midpoint) / midpoint
+        let baseline = 0.18 + (1 - distanceFromCenter) * 0.42
+        return min(0.96, baseline + visibleLevel * 0.34)
+    }
+}
+
+private let iosConversationTranscriptMaxCharacters = 6_000
+
+private extension String {
+    var isConversationBlank: Bool {
+        trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    func conversationDelta(since previous: String) -> String {
+        guard !isConversationBlank else { return "" }
+        if hasPrefix(previous) {
+            return String(dropFirst(previous.count))
+        }
+        let sharedPrefix = commonPrefix(with: previous)
+        return String(dropFirst(sharedPrefix.count))
+    }
+
+    func appendingConversationText(_ delta: String) -> String {
+        let next = (self + delta).trimmingLeadingConversationWhitespace()
+        guard next.count > iosConversationTranscriptMaxCharacters else {
+            return next
+        }
+        return String(next.suffix(iosConversationTranscriptMaxCharacters))
+            .trimmingLeadingConversationWhitespace()
+    }
+
+    func trimmingLeadingConversationWhitespace() -> String {
+        String(drop(while: { $0.isWhitespace }))
+    }
+}
+#endif
 
 private struct CredentialSetupPanel: View {
     @ObservedObject var viewModel: TranslationViewModel
@@ -667,7 +1309,9 @@ private struct MacSessionStatusPanel: View {
     let hasReceivedTranslation: Bool
     let latestInputTranscript: String
     let latestOutputTranscript: String
-    let macAudioBlendPercent: Int
+    let macCaptureSource: MacCaptureSource
+    let macOriginalAudioMode: MacOriginalAudioMode
+    let macOutputDeviceSelection: MacOutputDeviceSelection
 
     private var columns: [GridItem] {
         [
@@ -679,13 +1323,13 @@ private struct MacSessionStatusPanel: View {
     var body: some View {
         VStack(spacing: panelSpacing) {
             if shouldShowTranscriptPanel {
-                MacCompactStatusStrip(
-                    sourceValue: captureValue,
-                    sessionValue: translationValue,
-                    mixValue: blendValue,
-                    sourceTint: captureTint,
-                    sessionTint: translationTint
-                )
+                    MacCompactStatusStrip(
+                        sourceValue: captureValue,
+                        sessionValue: translationValue,
+                        mixValue: macOriginalAudioMode.title,
+                        sourceTint: captureTint,
+                        sessionTint: translationTint
+                    )
 
                 MacLiveTranscriptPanel(
                     isTranslating: isTranslating,
@@ -710,8 +1354,8 @@ private struct MacSessionStatusPanel: View {
 
                     MacStatusChip(
                         iconName: "slider.horizontal.3",
-                        title: L10n.string("statusChip.mix", defaultValue: "Mix"),
-                        value: blendValue,
+                        title: L10n.string("statusChip.original", defaultValue: "Original"),
+                        value: macOriginalAudioMode.title,
                         tint: ChuchotageColor.signalBlueSoft
                     )
 
@@ -756,24 +1400,16 @@ private struct MacSessionStatusPanel: View {
             : L10n.string("credential.needed", defaultValue: "Needed")
     }
 
-    private var blendValue: String {
-        L10n.format(
-            "mix.percentTranslated",
-            defaultValue: "%d%% translated",
-            macAudioBlendPercent
-        )
-    }
-
     private var captureValue: String {
         switch status {
         case .connecting:
             return L10n.string("status.preparing", defaultValue: "Preparing")
         case .listening:
             return hasCapturedAudio
-                ? L10n.string("status.audioHeard", defaultValue: "Audio heard")
+                ? macCaptureSource.title
                 : L10n.string("status.waiting", defaultValue: "Waiting")
         case .ready, .error:
-            return L10n.string("audioInput.macAudio", defaultValue: "Mac audio")
+            return macCaptureSource.title
         }
     }
 

@@ -24,6 +24,8 @@
 	<string>public.app-category.utilities</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>Chuchotage captures Mac playback audio only while translation is active.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Chuchotage uses the microphone only while microphone translation is active.</string>
 	<key>NSQuitAlwaysKeepsWindows</key>
 	<false/>
 	<key>NSPrincipalClass</key>

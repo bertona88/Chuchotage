@@ -38,6 +38,7 @@ enum TranslationAudioIOError: LocalizedError, Sendable {
     case systemAudioRequiresMacOS14_2
     case systemAudioCapturePermissionDenied
     case systemAudioCaptureStartFailed(String)
+    case outputDeviceUnavailable(String)
     case iOSDeviceAudioUnavailable
 
     var errorDescription: String? {
@@ -113,6 +114,12 @@ enum TranslationAudioIOError: LocalizedError, Sendable {
                 "error.macAudioStartFailed",
                 defaultValue: "Could not start Mac audio capture: %@",
                 message
+            )
+        case .outputDeviceUnavailable(let name):
+            return L10n.format(
+                "error.outputDeviceUnavailable",
+                defaultValue: "The selected output device is unavailable: %@. Choose another output and start translation again.",
+                name
             )
         case .iOSDeviceAudioUnavailable:
             return L10n.string(

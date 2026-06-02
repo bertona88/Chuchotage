@@ -212,6 +212,9 @@ actor TranslationRuntime {
         case .error(let message):
             await fail(message, sessionID: sessionID)
 
+        case .sessionClosed:
+            break
+
         case .ignored:
             break
         }

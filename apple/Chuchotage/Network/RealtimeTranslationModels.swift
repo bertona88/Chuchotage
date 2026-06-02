@@ -28,6 +28,7 @@ enum RealtimeTranslationEvent: Equatable, Sendable {
     case inputTranscriptDelta(String)
     case outputTranscriptDelta(String)
     case error(String)
+    case sessionClosed
     case ignored
 }
 
@@ -56,6 +57,9 @@ enum RealtimeTranslationEventParser {
 
         case "session.output_transcript.delta":
             return .outputTranscriptDelta(root["delta"] as? String ?? "")
+
+        case "session.closed":
+            return .sessionClosed
 
         case "error":
             let nested = root["error"] as? [String: Any]
@@ -90,6 +94,10 @@ enum RealtimeTranslationRequestBuilder {
 
     static func sessionUpdateEvent(targetLanguageCode: String) throws -> String {
         try jsonString(sessionUpdateObject(targetLanguageCode: targetLanguageCode))
+    }
+
+    static func sessionCloseEvent() throws -> String {
+        try jsonString(["type": "session.close"])
     }
 
     static func clientSecretRequestBody(targetLanguageCode: String) throws -> Data {

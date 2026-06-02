@@ -1,5 +1,6 @@
 #if os(macOS)
 @preconcurrency import AVFoundation
+@preconcurrency import AudioToolbox
 @preconcurrency import CoreAudio
 import Darwin
 import Foundation
@@ -11,11 +12,15 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
     func start(settings: TranslationSettings) async throws -> AsyncStream<PcmAudioChunk> {
         await stop()
 
+        if settings.macCaptureSource == .microphone {
+            return try await startMicrophoneCapture(settings: settings)
+        }
+
         guard #available(macOS 14.2, *) else {
             throw TranslationAudioIOError.systemAudioRequiresMacOS14_2
         }
 
-        return try startSystemAudioCapture(settings: settings)
+        return try startProcessTapCapture(settings: settings)
     }
 
     func playTranslatedAudio(_ pcm16: Data) async {
@@ -27,12 +32,20 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
     }
 
     func updateSettings(_ settings: TranslationSettings) async {
-        let gains = MacAudioBlend.gains(for: settings.macAudioBlendPercent)
+        let gains = Self.playbackGains(for: settings)
         stateQueue.sync {
             state.translatedGain = gains.translated
             state.translatedPlayerNode?.volume = Float(gains.translated)
             state.originalPlayerNode?.volume = Float(gains.original)
             state.captureProcessor?.updateOriginalMonitorGain(gains.original)
+        }
+    }
+
+    func consumeUnexpectedStopErrorMessage() async -> String? {
+        stateQueue.sync {
+            guard let message = state.unexpectedStopErrorMessage else { return nil }
+            state.unexpectedStopErrorMessage = nil
+            return message
         }
     }
 
@@ -44,7 +57,11 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
         }
 
         snapshot.captureProcessor?.stop()
+        snapshot.outputDeviceWatcher?.stop()
         snapshot.captureContinuation?.finish()
+        snapshot.microphoneCaptureEngine?.inputNode.removeTap(onBus: 0)
+        snapshot.microphoneCaptureEngine?.stop()
+        snapshot.microphoneCaptureEngine?.reset()
 
         if #available(macOS 14.2, *) {
             if let ioProcID = snapshot.ioProcID,
@@ -69,7 +86,7 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
     }
 
     @available(macOS 14.2, *)
-    private func startSystemAudioCapture(settings: TranslationSettings) throws -> AsyncStream<PcmAudioChunk> {
+    private func startProcessTapCapture(settings: TranslationSettings) throws -> AsyncStream<PcmAudioChunk> {
         let streamPair = AsyncStream.makeStream(
             of: PcmAudioChunk.self,
             bufferingPolicy: .bufferingNewest(maxQueuedCaptureChunks)
@@ -80,16 +97,22 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
         var playbackEngine: AVAudioEngine?
         var translatedPlayerNode: AVAudioPlayerNode?
         var originalPlayerNode: AVAudioPlayerNode?
-        let gains = MacAudioBlend.gains(for: settings.macAudioBlendPercent)
+        var outputDeviceWatcher: MacSelectedOutputDeviceWatcher?
+        let gains = Self.playbackGains(for: settings)
 
         do {
-            let playback = try Self.startPlaybackEngine(gains: gains)
+            let playback = try Self.startPlaybackEngine(
+                gains: gains,
+                outputSelection: settings.macOutputDeviceSelection
+            )
             playbackEngine = playback.engine
             translatedPlayerNode = playback.translatedPlayer
             originalPlayerNode = playback.originalPlayer
 
-            let processObjectID = try Self.currentProcessAudioObjectID()
-            tapID = try Self.createGlobalTap(excludingProcess: processObjectID)
+            tapID = try Self.createTap(
+                for: settings.macCaptureSource,
+                muteBehavior: Self.tapMuteBehavior(for: settings.macOriginalAudioMode)
+            )
             let tapUID = try Self.tapUID(for: tapID)
             let tapFormat = try Self.tapFormat(for: tapID)
             aggregateDeviceID = try Self.createAggregateDevice(forTapUID: tapUID)
@@ -133,8 +156,17 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
                     translatedGain: gains.translated,
                     captureProcessor: captureProcessor,
                     captureContinuation: streamPair.continuation,
+                    outputDeviceWatcher: outputDeviceWatcher,
                     isActive: true
                 )
+            }
+
+            outputDeviceWatcher = startOutputDeviceWatcherIfNeeded(
+                selection: settings.macOutputDeviceSelection,
+                continuation: streamPair.continuation
+            )
+            stateQueue.sync {
+                state.outputDeviceWatcher = outputDeviceWatcher
             }
 
             streamPair.continuation.onTermination = { [weak self] _ in
@@ -160,16 +192,106 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
             translatedPlayerNode?.stop()
             playbackEngine?.stop()
             playbackEngine?.reset()
+            outputDeviceWatcher?.stop()
+            throw error
+        }
+    }
+
+    private func startMicrophoneCapture(settings: TranslationSettings) async throws -> AsyncStream<PcmAudioChunk> {
+        guard await Self.requestMicrophonePermission() else {
+            throw TranslationAudioIOError.microphonePermissionDenied
+        }
+
+        let streamPair = AsyncStream.makeStream(
+            of: PcmAudioChunk.self,
+            bufferingPolicy: .bufferingNewest(maxQueuedCaptureChunks)
+        )
+        var playbackEngine: AVAudioEngine?
+        var translatedPlayerNode: AVAudioPlayerNode?
+        var originalPlayerNode: AVAudioPlayerNode?
+        var microphoneCaptureEngine: AVAudioEngine?
+        var outputDeviceWatcher: MacSelectedOutputDeviceWatcher?
+        let gains = Self.playbackGains(for: settings)
+
+        do {
+            let playback = try Self.startPlaybackEngine(
+                gains: gains,
+                outputSelection: settings.macOutputDeviceSelection
+            )
+            playbackEngine = playback.engine
+            translatedPlayerNode = playback.translatedPlayer
+            originalPlayerNode = playback.originalPlayer
+
+            let captureEngine = AVAudioEngine()
+            microphoneCaptureEngine = captureEngine
+            let inputNode = captureEngine.inputNode
+            let inputFormat = inputNode.outputFormat(forBus: 0)
+            guard inputFormat.channelCount > 0, inputFormat.sampleRate > 0 else {
+                throw TranslationAudioIOError.microphoneUnavailable
+            }
+
+            inputNode.installTap(onBus: 0, bufferSize: 1_024, format: inputFormat) { buffer, _ in
+                guard let pcm16 = MacOSAVAudioPcmConverter.convert(buffer), !pcm16.isEmpty else {
+                    return
+                }
+                streamPair.continuation.yield(PcmAudioChunk(pcm16: pcm16))
+            }
+
+            do {
+                captureEngine.prepare()
+                try captureEngine.start()
+            } catch {
+                inputNode.removeTap(onBus: 0)
+                throw TranslationAudioIOError.audioEngineStartFailed(error.localizedDescription)
+            }
+
+            outputDeviceWatcher = startOutputDeviceWatcherIfNeeded(
+                selection: settings.macOutputDeviceSelection,
+                continuation: streamPair.continuation
+            )
+
+            stateQueue.sync {
+                state = State(
+                    playbackEngine: playbackEngine,
+                    translatedPlayerNode: translatedPlayerNode,
+                    originalPlayerNode: originalPlayerNode,
+                    translatedGain: gains.translated,
+                    captureContinuation: streamPair.continuation,
+                    microphoneCaptureEngine: microphoneCaptureEngine,
+                    outputDeviceWatcher: outputDeviceWatcher,
+                    isActive: true
+                )
+            }
+
+            streamPair.continuation.onTermination = { [weak self] _ in
+                Task {
+                    await self?.stop()
+                }
+            }
+
+            return streamPair.stream
+        } catch {
+            streamPair.continuation.finish()
+            outputDeviceWatcher?.stop()
+            microphoneCaptureEngine?.inputNode.removeTap(onBus: 0)
+            microphoneCaptureEngine?.stop()
+            microphoneCaptureEngine?.reset()
+            originalPlayerNode?.stop()
+            translatedPlayerNode?.stop()
+            playbackEngine?.stop()
+            playbackEngine?.reset()
             throw error
         }
     }
 
     private static func startPlaybackEngine(
-        gains: (original: Double, translated: Double)
+        gains: (original: Double, translated: Double),
+        outputSelection: MacOutputDeviceSelection
     ) throws -> PlaybackSession {
         let audioEngine = AVAudioEngine()
         let translatedPlayer = AVAudioPlayerNode()
         let originalPlayer = AVAudioPlayerNode()
+        let selectedOutputDeviceID = try MacAudioOutputDeviceManager.deviceID(for: outputSelection)
 
         guard let playbackFormat = AVAudioFormat(
             standardFormatWithSampleRate: Double(RealtimePcmFormat.sampleRate),
@@ -188,6 +310,19 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
 
         do {
             audioEngine.prepare()
+            if var selectedOutputDeviceID, let outputUnit = audioEngine.outputNode.audioUnit {
+                try MacAudioCore.check(
+                    AudioUnitSetProperty(
+                        outputUnit,
+                        kAudioOutputUnitProperty_CurrentDevice,
+                        kAudioUnitScope_Global,
+                        0,
+                        &selectedOutputDeviceID,
+                        UInt32(MemoryLayout<AudioObjectID>.size)
+                    ),
+                    operation: "Select translated audio output device"
+                )
+            }
             try audioEngine.start()
             translatedPlayer.play()
             originalPlayer.play()
@@ -203,47 +338,39 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
     }
 
     @available(macOS 14.2, *)
-    private static func currentProcessAudioObjectID() throws -> AudioObjectID {
-        var pid = getpid()
-        var processObjectID = AudioObjectID(kAudioObjectUnknown)
-        var address = propertyAddress(kAudioHardwarePropertyTranslatePIDToProcessObject)
-        var dataSize = UInt32(MemoryLayout<AudioObjectID>.size)
-        let qualifierSize = UInt32(MemoryLayout<pid_t>.size)
-        let status = withUnsafePointer(to: &pid) { pidPointer in
-            AudioObjectGetPropertyData(
-                AudioObjectID(kAudioObjectSystemObject),
-                &address,
-                qualifierSize,
-                pidPointer,
-                &dataSize,
-                &processObjectID
+    private static func createTap(
+        for source: MacCaptureSource,
+        muteBehavior: CATapMuteBehavior
+    ) throws -> AudioObjectID {
+        let description: CATapDescription
+        switch source {
+        case .systemAudio:
+            let processObjectID = try MacAudioCore.currentProcessAudioObjectID()
+            description = CATapDescription(
+                stereoGlobalTapButExcludeProcesses: [processObjectID]
             )
-        }
-
-        try check(status, operation: "Find Chuchotage audio process")
-
-        guard processObjectID != kAudioObjectUnknown else {
+        case .selectedApp:
+            let processObjectIDs = try MacAudioProcessCatalog.processObjectIDs(for: source)
+            description = CATapDescription(stereoMixdownOfProcesses: processObjectIDs)
+            if #available(macOS 26.0, *) {
+                if case .selectedApp(let bundleID, _) = source {
+                    description.bundleIDs = [bundleID]
+                    description.isProcessRestoreEnabled = true
+                }
+            }
+        case .microphone:
             throw TranslationAudioIOError.systemAudioCaptureStartFailed(
-                "Chuchotage could not exclude its own playback from capture."
+                "Microphone capture does not use Core Audio process taps."
             )
         }
-
-        return processObjectID
-    }
-
-    @available(macOS 14.2, *)
-    private static func createGlobalTap(excludingProcess processObjectID: AudioObjectID) throws -> AudioObjectID {
-        let description = CATapDescription(
-            stereoGlobalTapButExcludeProcesses: [processObjectID]
-        )
-        description.name = "Chuchotage Mac Audio"
+        description.name = "Chuchotage \(source.title)"
         description.isPrivate = true
-        description.muteBehavior = systemAudioTapMuteBehavior
+        description.muteBehavior = muteBehavior
 
         var tapID = AudioObjectID(kAudioObjectUnknown)
-        try check(
+        try MacAudioCore.check(
             AudioHardwareCreateProcessTap(description, &tapID),
-            operation: "Create system audio tap"
+            operation: "Create Mac audio tap"
         )
 
         guard tapID != kAudioObjectUnknown else {
@@ -256,6 +383,16 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
     }
 
     @available(macOS 14.2, *)
+    private static func tapMuteBehavior(for mode: MacOriginalAudioMode) -> CATapMuteBehavior {
+        switch mode {
+        case .leaveAlone:
+            return .unmuted
+        case .lower, .mute:
+            return .mutedWhenTapped
+        }
+    }
+
+    @available(macOS 14.2, *)
     static var systemAudioTapMuteBehavior: CATapMuteBehavior {
         .mutedWhenTapped
     }
@@ -265,7 +402,7 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
         var dataSize = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
         var unmanagedUID: Unmanaged<CFString>?
 
-        try check(
+        try MacAudioCore.check(
             AudioObjectGetPropertyData(tapID, &address, 0, nil, &dataSize, &unmanagedUID),
             operation: "Read system audio tap identifier"
         )
@@ -284,7 +421,7 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
         var dataSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
         var format = AudioStreamBasicDescription()
 
-        try check(
+        try MacAudioCore.check(
             AudioObjectGetPropertyData(tapID, &address, 0, nil, &dataSize, &format),
             operation: "Read system audio tap format"
         )
@@ -312,7 +449,7 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
         ]
         var aggregateDeviceID = AudioObjectID(kAudioObjectUnknown)
 
-        try check(
+        try MacAudioCore.check(
             AudioHardwareCreateAggregateDevice(aggregateDescription as CFDictionary, &aggregateDeviceID),
             operation: "Create system audio capture device"
         )
@@ -324,6 +461,44 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
         }
 
         return aggregateDeviceID
+    }
+
+    private static func playbackGains(for settings: TranslationSettings) -> (original: Double, translated: Double) {
+        MacAudioBlend.gains(for: settings.macOriginalAudioMode)
+    }
+
+    private static func requestMicrophonePermission() async -> Bool {
+        await withCheckedContinuation { continuation in
+            AVCaptureDevice.requestAccess(for: .audio) { granted in
+                continuation.resume(returning: granted)
+            }
+        }
+    }
+
+    private func failFromOutputDeviceChange(_ message: String) {
+        let continuation = stateQueue.sync {
+            guard state.isActive else { return nil as AsyncStream<PcmAudioChunk>.Continuation? }
+            state.unexpectedStopErrorMessage = message
+            return state.captureContinuation
+        }
+        continuation?.finish()
+    }
+
+    private func startOutputDeviceWatcherIfNeeded(
+        selection: MacOutputDeviceSelection,
+        continuation: AsyncStream<PcmAudioChunk>.Continuation
+    ) -> MacSelectedOutputDeviceWatcher? {
+        switch selection {
+        case .systemDefault:
+            return nil
+        case .device(_, let name):
+            let watcher = MacSelectedOutputDeviceWatcher(selection: selection) { [weak self] in
+                let message = TranslationAudioIOError.outputDeviceUnavailable(name).localizedDescription
+                self?.failFromOutputDeviceChange(message)
+            }
+            watcher.start()
+            return watcher
+        }
     }
 
     fileprivate static func playPcm16(
@@ -435,6 +610,9 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
         var translatedGain = MacAudioBlend.gains(for: MacAudioBlend.defaultPercent).translated
         var captureProcessor: MacOSSystemAudioCaptureProcessor?
         var captureContinuation: AsyncStream<PcmAudioChunk>.Continuation?
+        var microphoneCaptureEngine: AVAudioEngine?
+        var outputDeviceWatcher: MacSelectedOutputDeviceWatcher?
+        var unexpectedStopErrorMessage: String?
         var isActive = false
     }
 }
@@ -442,6 +620,47 @@ final class MacOSTranslationAudioIO: TranslationAudioIO, @unchecked Sendable {
 struct MacOSCapturedAudioBuffer: Equatable, Sendable {
     let data: Data
     let channelCount: Int
+}
+
+private final class MacSelectedOutputDeviceWatcher: @unchecked Sendable {
+    private let selection: MacOutputDeviceSelection
+    private let onUnavailable: @Sendable () -> Void
+    private let queue = DispatchQueue(label: "ai.chuchotage.macos-output-device.watch")
+    private var timer: DispatchSourceTimer?
+    private var hasReportedUnavailable = false
+
+    init(
+        selection: MacOutputDeviceSelection,
+        onUnavailable: @escaping @Sendable () -> Void
+    ) {
+        self.selection = selection
+        self.onUnavailable = onUnavailable
+    }
+
+    func start() {
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now() + .seconds(1), repeating: .seconds(2))
+        timer.setEventHandler { [weak self] in
+            self?.checkAvailability()
+        }
+        timer.resume()
+        self.timer = timer
+    }
+
+    func stop() {
+        timer?.cancel()
+        timer = nil
+    }
+
+    private func checkAvailability() {
+        guard !hasReportedUnavailable,
+              !MacAudioOutputDeviceManager.contains(selection: selection) else {
+            return
+        }
+
+        hasReportedUnavailable = true
+        onUnavailable()
+    }
 }
 
 private final class MacOSPcmPlaybackChannel: @unchecked Sendable {
@@ -466,6 +685,73 @@ private final class MacOSPcmPlaybackChannel: @unchecked Sendable {
 
     private var currentGain: Double {
         lock.withLock { gain }
+    }
+}
+
+enum MacOSAVAudioPcmConverter {
+    static func convert(_ buffer: AVAudioPCMBuffer) -> Data? {
+        guard buffer.frameLength > 0,
+              let outputFormat = AVAudioFormat(
+                commonFormat: .pcmFormatInt16,
+                sampleRate: Double(RealtimePcmFormat.sampleRate),
+                channels: AVAudioChannelCount(RealtimePcmFormat.channelCount),
+                interleaved: false
+              ),
+              let converter = AVAudioConverter(from: buffer.format, to: outputFormat) else {
+            return nil
+        }
+
+        let ratio = outputFormat.sampleRate / buffer.format.sampleRate
+        let outputFrameCapacity = AVAudioFrameCount(
+            max(1, ceil(Double(buffer.frameLength) * ratio) + 8)
+        )
+        guard let outputBuffer = AVAudioPCMBuffer(
+            pcmFormat: outputFormat,
+            frameCapacity: outputFrameCapacity
+        ) else {
+            return nil
+        }
+
+        let inputProvider = MacOSAVAudioPcmInputProvider(buffer: buffer)
+        var conversionError: NSError?
+        let status = converter.convert(to: outputBuffer, error: &conversionError) { _, outStatus in
+            inputProvider.read(outStatus: outStatus)
+        }
+
+        guard conversionError == nil,
+              status != .error,
+              outputBuffer.frameLength > 0,
+              let channelData = outputBuffer.int16ChannelData else {
+            return nil
+        }
+
+        return Data(
+            bytes: channelData[0],
+            count: Int(outputBuffer.frameLength) * RealtimePcmFormat.bytesPerSample
+        )
+    }
+}
+
+private final class MacOSAVAudioPcmInputProvider: @unchecked Sendable {
+    private let lock = NSLock()
+    private var buffer: AVAudioPCMBuffer?
+
+    init(buffer: AVAudioPCMBuffer) {
+        self.buffer = buffer
+    }
+
+    func read(outStatus: UnsafeMutablePointer<AVAudioConverterInputStatus>) -> AVAudioBuffer? {
+        lock.lock()
+        defer { lock.unlock() }
+
+        guard let buffer else {
+            outStatus.pointee = .noDataNow
+            return nil
+        }
+
+        self.buffer = nil
+        outStatus.pointee = .haveData
+        return buffer
     }
 }
 

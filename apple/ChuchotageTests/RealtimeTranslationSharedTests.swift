@@ -28,6 +28,10 @@ final class RealtimeTranslationSharedTests: XCTestCase {
             ),
             .error("bad socket")
         )
+        XCTAssertEqual(
+            RealtimeTranslationEventParser.parse(#"{"type":"session.closed"}"#),
+            .sessionClosed
+        )
     }
 
     func testOneShotVoidContinuationIgnoresDuplicateResume() async throws {
@@ -62,6 +66,13 @@ final class RealtimeTranslationSharedTests: XCTestCase {
 
         XCTAssertEqual(payload["type"] as? String, "session.input_audio_buffer.append")
         XCTAssertEqual(payload["audio"] as? String, "AAE=")
+    }
+
+    func testBuildsTranslationSessionCloseEvent() throws {
+        let json = try RealtimeTranslationRequestBuilder.sessionCloseEvent()
+        let payload = try parseJsonObject(json)
+
+        XCTAssertEqual(payload["type"] as? String, "session.close")
     }
 
     func testBuildsSessionUpdateForApiKeySessions() throws {
@@ -174,9 +185,14 @@ final class RealtimeTranslationSharedTests: XCTestCase {
         store.save(
             TranslationSettings(
                 targetLanguageCode: "it",
+                conversationLocalLanguageCode: "en",
+                conversationPartnerLanguageCode: "fr",
                 audioInputSource: .defaultSource,
                 audioOutputRoute: .headphones,
-                macAudioBlendPercent: 35
+                macAudioBlendPercent: 35,
+                macCaptureSource: .selectedApp(bundleID: "com.apple.Safari", displayName: "Safari"),
+                macOriginalAudioMode: .lower,
+                macOutputDeviceSelection: .device(uid: "BuiltInOutputDevice", name: "MacBook Speakers")
             )
         )
 
@@ -184,10 +200,29 @@ final class RealtimeTranslationSharedTests: XCTestCase {
             store.read(),
             TranslationSettings(
                 targetLanguageCode: "it",
+                conversationLocalLanguageCode: "en",
+                conversationPartnerLanguageCode: "fr",
                 audioInputSource: .defaultSource,
                 audioOutputRoute: .headphones,
-                macAudioBlendPercent: 35
+                macAudioBlendPercent: 35,
+                macCaptureSource: .selectedApp(bundleID: "com.apple.Safari", displayName: "Safari"),
+                macOriginalAudioMode: .lower,
+                macOutputDeviceSelection: .device(uid: "BuiltInOutputDevice", name: "MacBook Speakers")
             )
+        )
+    }
+
+    func testConversationPartnerLanguageDefaultsToItalianWhenLocalLanguageIsEnglish() {
+        XCTAssertEqual(
+            TranslationLanguages.defaultConversationPartnerLanguageCode(for: "en"),
+            "it"
+        )
+    }
+
+    func testConversationPartnerLanguageDefaultsToEnglishWhenLocalLanguageIsNotEnglish() {
+        XCTAssertEqual(
+            TranslationLanguages.defaultConversationPartnerLanguageCode(for: "fr"),
+            "en"
         )
     }
 
@@ -207,6 +242,14 @@ final class RealtimeTranslationSharedTests: XCTestCase {
         let translatedOnly = MacAudioBlend.gains(for: 100)
         XCTAssertEqual(translatedOnly.original, 0.0, accuracy: 0.0001)
         XCTAssertEqual(translatedOnly.translated, 1.0, accuracy: 0.0001)
+
+        let loweredOriginal = MacAudioBlend.gains(for: MacOriginalAudioMode.lower)
+        XCTAssertEqual(loweredOriginal.original, 0.2, accuracy: 0.0001)
+        XCTAssertEqual(loweredOriginal.translated, 1.0, accuracy: 0.0001)
+
+        let mutedOriginal = MacAudioBlend.gains(for: MacOriginalAudioMode.mute)
+        XCTAssertEqual(mutedOriginal.original, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(mutedOriginal.translated, 1.0, accuracy: 0.0001)
 
         let suiteName = "ChuchotageTests.\(UUID().uuidString)"
         let userDefaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
