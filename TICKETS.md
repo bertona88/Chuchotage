@@ -2,7 +2,7 @@
 
 
 NEW TICKETS AND PRODUCT GUIDELINES
-- We need to display or detect when users are not using headphones and tell them to use headphones, otherwise there is feedback loop and the thing keeps repeating itself.
+- Triaged 2026-06-03: mobile headphone feedback-loop parity is tracked as CHU-026.
 
 
 
@@ -269,16 +269,39 @@ Area: Android / UX / Audio Routing
 Warn or block risky microphone-input plus phone-speaker output configurations.
 
 Acceptance:
-- If input is phone/headset mic and output is phone speaker, show `Use headphones to avoid audio feedback.`
+- If input is phone/headset mic and output is phone speaker, show a clear headphone warning.
 - Decide whether to block by default or require confirmation.
 - Do not block device-audio capture unnecessarily.
 - Add tests for routing warning state where practical.
 
 State 2026-05-17:
 - Implemented a confirmation guard for phone/headset microphone input routed to the phone speaker.
-- Shows `Use headphones to avoid audio feedback.` in Settings and before starting a risky session.
+- Shows headphone feedback-loop guidance in Settings and before starting a risky session.
 - Device-audio capture is not blocked by the guard; widget/non-UI starts open the app or stop at the service backstop instead of starting unconfirmed.
 - Added focused unit tests for the routing warning state.
+
+### CHU-026 - Mobile Headphone Feedback Guard Parity
+
+Status: In Progress
+Priority: P1
+Area: Android / iOS / UX / Audio Routing
+
+Make the mobile apps unmistakable about the bad setup where translated speech plays from the phone speaker while the phone microphone is listening.
+
+Acceptance:
+- Android and iPhone both show clear headphone guidance when phone-mic plus phone-speaker routing can create a repeat loop.
+- Treat system-default output with no connected headphone/earbud route as risky on mobile when the platform exposes enough route information.
+- The start flow requires an explicit user choice before starting a risky microphone-to-speaker session.
+- The warning explains the actual failure mode: translated speech can feed back into the mic and make Chuchotage repeat itself.
+- Offer a clear `Use headphones` path and keep `Start anyway` as an explicit opt-in.
+- Do not block Android device-audio capture unnecessarily.
+- Keep copy firm and practical without insulting the user.
+- Smoke test on real Android and iPhone hardware with phone speaker, wired headphones, and Bluetooth headphones before marking Done.
+
+State 2026-06-03:
+- Android already had the CHU-012 confirmation guard; this pass strengthened the warning copy.
+- iPhone now uses a start-time confirmation instead of only a passive inline warning.
+- Remaining before Done: real-device Android and iPhone smoke with phone speaker, wired headphones, and Bluetooth headphones.
 
 ### CHU-013 - Device Audio Original-Sound Suppression
 

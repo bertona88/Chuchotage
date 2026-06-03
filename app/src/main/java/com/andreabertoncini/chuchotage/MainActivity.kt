@@ -307,7 +307,7 @@ private fun ChuchotageScreen(
         if (hasStartPermissions(context, settings.audioInputSource)) {
             if (request == TranslationStartRequest.ArmHeadsetAutoStart) {
                 executeTranslationStartRequest(request)
-            } else if (settings.hasAudioFeedbackRisk()) {
+            } else if (settings.hasAudioFeedbackRisk(AudioDevices.isHeadsetPlaybackAvailable(context))) {
                 pendingFeedbackGuardStartRequest = request
             } else if (settings.audioInputSource == AudioInputSource.DeviceAudio) {
                 requestDeviceAudioCaptureConsent(request)
@@ -384,7 +384,10 @@ private fun ChuchotageScreen(
 
         if (!hasStartPermissions(context, settings.audioInputSource)) {
             promptForStartPermissions(request)
-        } else if (!allowAudioFeedbackRisk && settings.hasAudioFeedbackRisk()) {
+        } else if (
+            !allowAudioFeedbackRisk &&
+            settings.hasAudioFeedbackRisk(AudioDevices.isHeadsetPlaybackAvailable(context))
+        ) {
             pendingFeedbackGuardStartRequest = request
         } else if (settings.audioInputSource == AudioInputSource.DeviceAudio) {
             startWithDeviceAudioCapture(request, allowAudioFeedbackRisk)
@@ -1617,8 +1620,8 @@ private fun AudioOutputSettingsSection(
     onFocusBackgroundChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val focusBackgroundAvailable = selected != AudioOutputRoute.PhoneSpeaker &&
-        AudioDevices.isHeadsetPlaybackAvailable(context)
+    val headsetPlaybackAvailable = AudioDevices.isHeadsetPlaybackAvailable(context)
+    val focusBackgroundAvailable = selected != AudioOutputRoute.PhoneSpeaker && headsetPlaybackAvailable
 
     Text(
         text = stringResource(R.string.audio_output_title),
@@ -1650,7 +1653,12 @@ private fun AudioOutputSettingsSection(
         available = focusBackgroundAvailable,
         onEnabledChange = onFocusBackgroundChange,
     )
-    if (TranslationSettings(audioInputSource = audioInputSource, audioOutputRoute = selected).hasAudioFeedbackRisk()) {
+    if (
+        TranslationSettings(
+            audioInputSource = audioInputSource,
+            audioOutputRoute = selected,
+        ).hasAudioFeedbackRisk(headsetPlaybackAvailable)
+    ) {
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = stringResource(R.string.audio_feedback_warning),

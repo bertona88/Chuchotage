@@ -242,6 +242,7 @@ class TranslationSettingsTest {
         )
 
         assertTrue(settings.hasAudioFeedbackRisk())
+        assertTrue(settings.hasAudioFeedbackRisk(headphonesOrEarbudsConnected = false))
         assertEquals(AUDIO_FEEDBACK_WARNING_MESSAGE, settings.audioFeedbackWarningMessage())
     }
 
@@ -253,7 +254,20 @@ class TranslationSettingsTest {
         )
 
         assertTrue(settings.hasAudioFeedbackRisk())
+        assertTrue(settings.hasAudioFeedbackRisk(headphonesOrEarbudsConnected = false))
         assertEquals(AUDIO_FEEDBACK_WARNING_MESSAGE, settings.audioFeedbackWarningMessage())
+    }
+
+    @Test
+    fun phoneMicToSystemDefaultWithoutHeadphonesShowsAudioFeedbackRiskAtRuntime() {
+        val settings = TranslationSettings(
+            audioInputSource = AudioInputSource.Phone,
+            audioOutputRoute = AudioOutputRoute.SystemDefault,
+        )
+
+        assertFalse(settings.hasAudioFeedbackRisk())
+        assertTrue(settings.hasAudioFeedbackRisk(headphonesOrEarbudsConnected = false))
+        assertFalse(settings.hasAudioFeedbackRisk(headphonesOrEarbudsConnected = true))
     }
 
     @Test

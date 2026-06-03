@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Headphone</string>
     <string name="focus_background_title">Latar fokus</string>
     <string name="focus_background_body">Audio latar lembut mengisi jeda sunyi dan merunduk di bawah suara terjemahan. Hanya headphone.</string>
-    <string name="audio_feedback_title">Headphone disarankan</string>
-    <string name="audio_feedback_warning">Gunakan headphone untuk menghindari umpan balik audio.</string>
+    <string name="audio_feedback_title">Gunakan headphone</string>
+    <string name="audio_feedback_warning">Gunakan headphone. Speaker ponsel dapat memasukkan audio terjemahan kembali ke mikrofon dan membuat Chuchotage mengulanginya.</string>
     <string name="audio_feedback_start_anyway">Tetap mulai</string>
     <string name="audio_feedback_use_headphones">Gunakan headphone</string>
     <string name="permission_microphone_title">Akses mikrofon diperlukan</string>

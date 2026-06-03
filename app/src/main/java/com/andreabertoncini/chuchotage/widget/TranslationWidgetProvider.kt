@@ -12,6 +12,7 @@ import android.widget.RemoteViews
 import com.andreabertoncini.chuchotage.MainActivity
 import com.andreabertoncini.chuchotage.R
 import com.andreabertoncini.chuchotage.TranslationActions
+import com.andreabertoncini.chuchotage.audio.AudioDevices
 import com.andreabertoncini.chuchotage.network.SecureApiKeyStore
 import com.andreabertoncini.chuchotage.service.TranslationForegroundService
 import com.andreabertoncini.chuchotage.settings.AudioInputSource
@@ -71,7 +72,7 @@ class TranslationWidgetProvider : AppWidgetProvider() {
             val settings = TranslationSettingsStore(context).read()
             val snapshot = TranslationController.snapshot(context)
             val canStart = settings.audioInputSource != AudioInputSource.DeviceAudio &&
-                !settings.hasAudioFeedbackRisk() &&
+                !settings.hasAudioFeedbackRisk(AudioDevices.isHeadsetPlaybackAvailable(context)) &&
                 TranslationController.hasStartPermissions(context) &&
                 SecureApiKeyStore(context).hasCredential()
 

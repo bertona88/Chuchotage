@@ -18,6 +18,7 @@
 "audioOutput.systemDefault" = "System default";
 "bottom.conversation" = "Conversation";
 "bottom.translate" = "Translate";
+"common.cancel" = "Cancel";
 "chatGPTSignIn.alreadyInProgress" = "A ChatGPT sign-in is already in progress.";
 "chatGPTSignIn.browserUnavailable" = "Could not open a browser for ChatGPT sign-in.";
 "chatGPTSignIn.callbackServerUnavailable" = "Could not start the local sign-in callback server. Try again.";
@@ -141,6 +142,7 @@
 "settings.done" = "Done";
 "settings.feedbackGuard" = "Feedback guard";
 "settings.feedbackGuard.detail" = "The app avoids recapturing its translated output during an active session.";
+"settings.headphonesRecommended" = "Use headphones so translated speech does not feed back into the mic.";
 "settings.language" = "Language";
 "settings.listeningTo" = "Listening to";
 "settings.macCaptureActiveOnly" = "Mac audio capture starts only while translation is active.";
@@ -213,4 +215,8 @@
 "translation.start" = "Start translation";
 "translation.stop" = "Stop translation";
 "translation.stopShort" = "Stop";
-"warning.feedbackRisk.phoneMicSpeaker" = "Phone mic + phone speaker can cause feedback. Headphones are recommended.";
+"warning.feedbackRisk.phoneMicSpeaker" = "Use headphones. The phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself.";
+"warning.feedbackRisk.phoneMicSpeaker.repeatLoop" = "Use headphones. The phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself.";
+"warning.feedbackRisk.startAnyway" = "Start anyway";
+"warning.feedbackRisk.title" = "Use headphones";
+"warning.feedbackRisk.useHeadphones" = "Use headphones";

@@ -34,6 +34,33 @@ struct AppRootView: View {
         .sheet(isPresented: $isShowingSettings) {
             TranslationSettingsSheet(viewModel: viewModel)
         }
+        #if os(iOS)
+        .alert(
+            L10n.string("warning.feedbackRisk.title", defaultValue: "Use headphones"),
+            isPresented: $viewModel.isFeedbackRiskConfirmationPresented
+        ) {
+            Button(L10n.string("warning.feedbackRisk.useHeadphones", defaultValue: "Use headphones")) {
+                viewModel.useHeadphonesForPendingFeedbackRisk()
+            }
+            Button(
+                L10n.string("warning.feedbackRisk.startAnyway", defaultValue: "Start anyway"),
+                role: .destructive
+            ) {
+                viewModel.startPendingTranslationDespiteFeedbackRisk()
+            }
+            Button(L10n.string("common.cancel", defaultValue: "Cancel"), role: .cancel) {
+                viewModel.cancelPendingFeedbackRiskStart()
+            }
+        } message: {
+            Text(
+                viewModel.feedbackRiskWarningMessage
+                    ?? L10n.string(
+                        "warning.feedbackRisk.phoneMicSpeaker.repeatLoop",
+                        defaultValue: "Use headphones. The phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself."
+                    )
+            )
+        }
+        #endif
     }
 
     @ViewBuilder

@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">ヘッドホン</string>
     <string name="focus_background_title">フォーカス背景</string>
     <string name="focus_background_body">静かな間をやわらかい背景音で埋め、翻訳音声の下で音量を下げます。ヘッドホン専用です。</string>
-    <string name="audio_feedback_title">ヘッドホン推奨</string>
-    <string name="audio_feedback_warning">音声フィードバックを避けるためヘッドホンを使ってください。</string>
+    <string name="audio_feedback_title">ヘッドホンを使う</string>
+    <string name="audio_feedback_warning">ヘッドホンを使ってください。スマホのスピーカー音がマイクに戻り、Chuchotage が同じ翻訳を繰り返すことがあります。</string>
     <string name="audio_feedback_start_anyway">それでも開始</string>
     <string name="audio_feedback_use_headphones">ヘッドホンを使う</string>
     <string name="permission_microphone_title">マイクへのアクセスが必要です</string>

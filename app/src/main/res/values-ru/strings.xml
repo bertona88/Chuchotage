@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Наушники</string>
     <string name="focus_background_title">Фоновый звук для фокуса</string>
     <string name="focus_background_body">Мягкий фоновый звук заполняет паузы и приглушается под переведенную речь. Только в наушниках.</string>
-    <string name="audio_feedback_title">Рекомендуются наушники</string>
-    <string name="audio_feedback_warning">Используйте наушники, чтобы избежать аудиообратной связи.</string>
+    <string name="audio_feedback_title">Используйте наушники</string>
+    <string name="audio_feedback_warning">Используйте наушники. Динамик телефона может снова отправить переведенную речь в микрофон, и Chuchotage начнет повторяться.</string>
     <string name="audio_feedback_start_anyway">Все равно начать</string>
     <string name="audio_feedback_use_headphones">Использовать наушники</string>
     <string name="permission_microphone_title">Нужен доступ к микрофону</string>

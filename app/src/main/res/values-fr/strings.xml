@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Casque</string>
     <string name="focus_background_title">Fond de concentration</string>
     <string name="focus_background_body">Un fond audio doux remplit les silences et baisse sous la parole traduite. Casque uniquement.</string>
-    <string name="audio_feedback_title">Casque recommandé</string>
-    <string name="audio_feedback_warning">Utilisez un casque pour éviter le retour audio.</string>
+    <string name="audio_feedback_title">Utiliser un casque</string>
+    <string name="audio_feedback_warning">Utilisez un casque. Le haut-parleur du téléphone peut renvoyer la traduction dans le micro et faire se répéter Chuchotage.</string>
     <string name="audio_feedback_start_anyway">Démarrer quand même</string>
     <string name="audio_feedback_use_headphones">Utiliser un casque</string>
     <string name="permission_microphone_title">Accès au micro nécessaire</string>

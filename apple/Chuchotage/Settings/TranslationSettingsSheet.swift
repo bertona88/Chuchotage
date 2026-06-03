@@ -126,7 +126,7 @@ struct TranslationSettingsSheet: View {
                 Section {
                     Text(
                         l10n: "settings.headphonesRecommended",
-                        defaultValue: "Headphones recommended to avoid feedback."
+                        defaultValue: "Use headphones so translated speech does not feed back into the mic."
                     )
                         .font(.footnote)
                         .foregroundStyle(.secondary)

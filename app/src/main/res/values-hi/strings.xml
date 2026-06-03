@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">हेडफ़ोन</string>
     <string name="focus_background_title">फोकस पृष्ठभूमि</string>
     <string name="focus_background_body">नरम पृष्ठभूमि ऑडियो शांत अंतराल भरता है और अनुवादित आवाज के नीचे धीमा हो जाता है। केवल हेडफोन।</string>
-    <string name="audio_feedback_title">हेडफोन अनुशंसित</string>
-    <string name="audio_feedback_warning">ऑडियो फीडबैक से बचने के लिए हेडफोन इस्तेमाल करें।</string>
+    <string name="audio_feedback_title">हेडफोन इस्तेमाल करें</string>
+    <string name="audio_feedback_warning">हेडफोन इस्तेमाल करें। फोन स्पीकर अनुवादित आवाज़ को फिर से माइक्रोफोन में भेज सकता है और Chuchotage उसे दोहरा सकता है।</string>
     <string name="audio_feedback_start_anyway">फिर भी शुरू करें</string>
     <string name="audio_feedback_use_headphones">हेडफोन इस्तेमाल करें</string>
     <string name="permission_microphone_title">माइक्रोफोन पहुंच आवश्यक</string>

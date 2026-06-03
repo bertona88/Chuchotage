@@ -1,4 +1,28 @@
+#if os(iOS)
+@preconcurrency import AVFoundation
+#endif
 import SwiftUI
+
+#if os(iOS)
+private func defaultHeadphonesOrEarbudsConnected() -> Bool {
+    return AVAudioSession.sharedInstance().currentRoute.outputs.contains { output in
+        isHeadphoneOutput(output.portType)
+    }
+}
+
+private func isHeadphoneOutput(_ portType: AVAudioSession.Port) -> Bool {
+    switch portType {
+    case .headphones, .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
+        return true
+    default:
+        return false
+    }
+}
+#else
+private func defaultHeadphonesOrEarbudsConnected() -> Bool {
+    return true
+}
+#endif
 
 @MainActor
 final class TranslationViewModel: ObservableObject {
@@ -14,6 +38,7 @@ final class TranslationViewModel: ObservableObject {
     @Published private(set) var credentialErrorMessage: String?
     @Published private(set) var isCredentialBusy = false
     @Published private(set) var chatGPTSignInStatusMessage: String?
+    @Published var isFeedbackRiskConfirmationPresented = false
     #if os(macOS)
     @Published private(set) var macCaptureSourceOptions: [MacCaptureSource] = [.systemAudio, .microphone]
     @Published private(set) var macOutputDeviceOptions: [MacOutputDeviceSelection] = [.systemDefault]
@@ -30,9 +55,11 @@ final class TranslationViewModel: ObservableObject {
     private let codexAuthCredentialImporter: CodexAuthCredentialImporter
     private let chatGPTOAuthClient: ChatGPTOAuthClient
     private let runtime: TranslationRuntime?
+    private let headphonesOrEarbudsConnectedProvider: () -> Bool
     private var runtimeEventTask: Task<Void, Never>?
     private var acceptsRuntimeActivity = false
     private var credentialRefreshGeneration = 0
+    private var pendingFeedbackRiskStart: PendingTranslationStart?
 
     private static let detectedAudioThreshold = 0.08
     private static let maxTranscriptCharacters = 8_192
@@ -42,13 +69,15 @@ final class TranslationViewModel: ObservableObject {
         credentialStore: any OpenAICredentialStoring = EmptyOpenAICredentialStore(),
         codexAuthCredentialImporter: CodexAuthCredentialImporter = CodexAuthCredentialImporter(),
         chatGPTOAuthClient: ChatGPTOAuthClient = ChatGPTOAuthClient(),
-        runtime: TranslationRuntime? = nil
+        runtime: TranslationRuntime? = nil,
+        headphonesOrEarbudsConnectedProvider: @escaping () -> Bool = defaultHeadphonesOrEarbudsConnected
     ) {
         self.settingsStore = settingsStore
         self.credentialStore = credentialStore
         self.codexAuthCredentialImporter = codexAuthCredentialImporter
         self.chatGPTOAuthClient = chatGPTOAuthClient
         self.runtime = runtime
+        self.headphonesOrEarbudsConnectedProvider = headphonesOrEarbudsConnectedProvider
         self.settings = settingsStore.read()
         observeRuntimeEvents()
         refreshCredentialStatus()
@@ -128,15 +157,22 @@ final class TranslationViewModel: ObservableObject {
     }
 
     var feedbackRiskWarningMessage: String? {
+        guard hasFeedbackRisk else { return nil }
+        return L10n.string(
+            "warning.feedbackRisk.phoneMicSpeaker.repeatLoop",
+            defaultValue: "Use headphones. The phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself."
+        )
+    }
+
+    private var hasFeedbackRisk: Bool {
         #if os(iOS)
-        if settings.audioInputSource == .builtIn && settings.audioOutputRoute == .deviceSpeaker {
-            return L10n.string(
-                "warning.feedbackRisk.phoneMicSpeaker",
-                defaultValue: "Phone mic + phone speaker can cause feedback. Headphones are recommended."
-            )
-        }
+        let usesMicrophoneInput = settings.audioInputSource == .builtIn || settings.audioInputSource == .headset
+        guard usesMicrophoneInput else { return false }
+        return settings.audioOutputRoute == .deviceSpeaker ||
+            (settings.audioOutputRoute == .systemDefault && !headphonesOrEarbudsConnectedProvider())
+        #else
+        return false
         #endif
-        return nil
     }
 
     var targetLanguage: TranslationLanguage {
@@ -218,12 +254,12 @@ final class TranslationViewModel: ObservableObject {
     }
 
     func toggleTranslation() {
-        Task {
-            if isTranslating {
+        if isTranslating {
+            Task {
                 await stopTranslation()
-            } else {
-                await startTranslation()
             }
+        } else {
+            requestTranslationStart()
         }
     }
 
@@ -238,9 +274,37 @@ final class TranslationViewModel: ObservableObject {
     }
 
     func startConversationTurn(targetLanguageCode: String) {
+        requestTranslationStart(targetLanguageCode: targetLanguageCode, restartIfNeeded: true)
+    }
+
+    func startPendingTranslationDespiteFeedbackRisk() {
+        let pendingStart = pendingFeedbackRiskStart ?? PendingTranslationStart()
+        pendingFeedbackRiskStart = nil
+        isFeedbackRiskConfirmationPresented = false
         Task {
-            await startTranslation(targetLanguageCode: targetLanguageCode, restartIfNeeded: true)
+            await startTranslation(
+                targetLanguageCode: pendingStart.targetLanguageCode,
+                restartIfNeeded: pendingStart.restartIfNeeded
+            )
         }
+    }
+
+    func useHeadphonesForPendingFeedbackRisk() {
+        let pendingStart = pendingFeedbackRiskStart ?? PendingTranslationStart()
+        pendingFeedbackRiskStart = nil
+        isFeedbackRiskConfirmationPresented = false
+        #if os(iOS)
+        settings.audioOutputRoute = .headphones
+        #endif
+        requestTranslationStart(
+            targetLanguageCode: pendingStart.targetLanguageCode,
+            restartIfNeeded: pendingStart.restartIfNeeded
+        )
+    }
+
+    func cancelPendingFeedbackRiskStart() {
+        pendingFeedbackRiskStart = nil
+        isFeedbackRiskConfirmationPresented = false
     }
 
     #if os(macOS)
@@ -421,6 +485,28 @@ final class TranslationViewModel: ObservableObject {
         return UUID().uuidString.lowercased()
     }
 
+    private func requestTranslationStart(
+        targetLanguageCode: String? = nil,
+        restartIfNeeded: Bool = false
+    ) {
+        if shouldConfirmFeedbackRiskBeforeStart {
+            pendingFeedbackRiskStart = PendingTranslationStart(
+                targetLanguageCode: targetLanguageCode,
+                restartIfNeeded: restartIfNeeded
+            )
+            isFeedbackRiskConfirmationPresented = true
+            return
+        }
+
+        Task {
+            await startTranslation(targetLanguageCode: targetLanguageCode, restartIfNeeded: restartIfNeeded)
+        }
+    }
+
+    private var shouldConfirmFeedbackRiskBeforeStart: Bool {
+        hasFeedbackRisk && !isTranslating
+    }
+
     private func startTranslation(
         targetLanguageCode: String? = nil,
         restartIfNeeded: Bool = false
@@ -561,5 +647,10 @@ final class TranslationViewModel: ObservableObject {
     private func trimmedTranscript(_ text: String) -> String {
         guard text.count > Self.maxTranscriptCharacters else { return text }
         return String(text.suffix(Self.maxTranscriptCharacters))
+    }
+
+    private struct PendingTranslationStart {
+        var targetLanguageCode: String?
+        var restartIfNeeded = false
     }
 }

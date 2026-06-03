@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Cuffie</string>
     <string name="focus_background_title">Sfondo focus</string>
     <string name="focus_background_body">Un audio morbido riempie i silenzi e si abbassa sotto la voce tradotta. Solo cuffie.</string>
-    <string name="audio_feedback_title">Cuffie consigliate</string>
-    <string name="audio_feedback_warning">Usa le cuffie per evitare feedback audio.</string>
+    <string name="audio_feedback_title">Usa le cuffie</string>
+    <string name="audio_feedback_warning">Usa le cuffie. Lo speaker del telefono può rimandare la traduzione nel microfono e far ripetere Chuchotage.</string>
     <string name="audio_feedback_start_anyway">Avvia comunque</string>
     <string name="audio_feedback_use_headphones">Usa cuffie</string>
     <string name="permission_microphone_title">Accesso al microfono necessario</string>

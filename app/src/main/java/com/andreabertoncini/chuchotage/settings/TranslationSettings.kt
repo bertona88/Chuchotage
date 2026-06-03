@@ -41,7 +41,9 @@ enum class AudioOutputRoute(
     }
 }
 
-const val AUDIO_FEEDBACK_WARNING_MESSAGE = "Use headphones to avoid audio feedback."
+const val AUDIO_FEEDBACK_WARNING_MESSAGE =
+    "Use headphones. The phone speaker can feed translated speech back into the mic " +
+        "and make Chuchotage repeat itself."
 
 data class TranslationSettings(
     val targetLanguageCode: String = TranslationLanguages.DEFAULT_TARGET_LANGUAGE_CODE,
@@ -84,8 +86,17 @@ fun TranslationSettings.needsActiveSessionRestart(next: TranslationSettings): Bo
 }
 
 fun TranslationSettings.hasAudioFeedbackRisk(): Boolean {
-    return audioOutputRoute == AudioOutputRoute.PhoneSpeaker &&
-        (audioInputSource == AudioInputSource.Phone || audioInputSource == AudioInputSource.Headset)
+    return usesMicrophoneInput() && audioOutputRoute == AudioOutputRoute.PhoneSpeaker
+}
+
+fun TranslationSettings.hasAudioFeedbackRisk(headphonesOrEarbudsConnected: Boolean): Boolean {
+    if (!usesMicrophoneInput()) return false
+    return audioOutputRoute == AudioOutputRoute.PhoneSpeaker ||
+        (audioOutputRoute == AudioOutputRoute.SystemDefault && !headphonesOrEarbudsConnected)
+}
+
+private fun TranslationSettings.usesMicrophoneInput(): Boolean {
+    return audioInputSource == AudioInputSource.Phone || audioInputSource == AudioInputSource.Headset
 }
 
 fun TranslationSettings.audioFeedbackWarningMessage(): String? {

@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Kopfhörer</string>
     <string name="focus_background_title">Fokus-Hintergrund</string>
     <string name="focus_background_body">Leiser Hintergrundton füllt Pausen und duckt unter die übersetzte Sprache. Nur mit Kopfhörern.</string>
-    <string name="audio_feedback_title">Kopfhörer empfohlen</string>
-    <string name="audio_feedback_warning">Verwende Kopfhörer, um Audio-Rückkopplung zu vermeiden.</string>
+    <string name="audio_feedback_title">Kopfhörer verwenden</string>
+    <string name="audio_feedback_warning">Verwende Kopfhörer. Der Telefonlautsprecher kann die Übersetzung wieder ins Mikrofon schicken und Chuchotage dazu bringen, sich zu wiederholen.</string>
     <string name="audio_feedback_start_anyway">Trotzdem starten</string>
     <string name="audio_feedback_use_headphones">Kopfhörer verwenden</string>
     <string name="permission_microphone_title">Mikrofonzugriff erforderlich</string>

@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Tai nghe</string>
     <string name="focus_background_title">Nền tập trung</string>
     <string name="focus_background_body">Âm nền nhẹ lấp khoảng lặng và hạ xuống dưới giọng dịch. Chỉ dùng tai nghe.</string>
-    <string name="audio_feedback_title">Khuyên dùng tai nghe</string>
-    <string name="audio_feedback_warning">Dùng tai nghe để tránh phản hồi âm thanh.</string>
+    <string name="audio_feedback_title">Dùng tai nghe</string>
+    <string name="audio_feedback_warning">Dùng tai nghe. Loa điện thoại có thể đưa tiếng dịch trở lại mic và khiến Chuchotage lặp lại.</string>
     <string name="audio_feedback_start_anyway">Vẫn bắt đầu</string>
     <string name="audio_feedback_use_headphones">Dùng tai nghe</string>
     <string name="permission_microphone_title">Cần quyền truy cập micro</string>

@@ -70,7 +70,8 @@ final class TranslationViewModelTests: XCTestCase {
         let viewModel = TranslationViewModel(
             settingsStore: InMemorySettingsStore(),
             credentialStore: credentialStore,
-            runtime: runtime
+            runtime: runtime,
+            headphonesOrEarbudsConnectedProvider: { true }
         )
 
         viewModel.toggleTranslation()
@@ -103,7 +104,8 @@ final class TranslationViewModelTests: XCTestCase {
                 )
             ),
             credentialStore: credentialStore,
-            runtime: runtime
+            runtime: runtime,
+            headphonesOrEarbudsConnectedProvider: { true }
         )
 
         viewModel.startConversationTurn(targetLanguageCode: "it")
@@ -128,7 +130,8 @@ final class TranslationViewModelTests: XCTestCase {
         let viewModel = TranslationViewModel(
             settingsStore: InMemorySettingsStore(),
             credentialStore: credentialStore,
-            runtime: runtime
+            runtime: runtime,
+            headphonesOrEarbudsConnectedProvider: { true }
         )
 
         viewModel.toggleTranslation()
@@ -178,8 +181,117 @@ final class TranslationViewModelTests: XCTestCase {
 
         XCTAssertEqual(
             viewModel.feedbackRiskWarningMessage,
-            "Phone mic + phone speaker can cause feedback. Headphones are recommended."
+            "Use headphones. The phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself."
         )
+    }
+
+    func testFeedbackRiskWarningShownForSystemDefaultWithoutHeadphones() {
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(
+                settings: TranslationSettings(
+                    targetLanguageCode: "en",
+                    audioInputSource: .builtIn,
+                    audioOutputRoute: .systemDefault
+                )
+            ),
+            credentialStore: InMemoryCredentialStore(initialCredential: nil),
+            headphonesOrEarbudsConnectedProvider: { false }
+        )
+
+        XCTAssertEqual(
+            viewModel.feedbackRiskWarningMessage,
+            "Use headphones. The phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself."
+        )
+    }
+
+    func testFeedbackRiskWarningHiddenForSystemDefaultWithHeadphones() {
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(
+                settings: TranslationSettings(
+                    targetLanguageCode: "en",
+                    audioInputSource: .builtIn,
+                    audioOutputRoute: .systemDefault
+                )
+            ),
+            credentialStore: InMemoryCredentialStore(initialCredential: nil),
+            headphonesOrEarbudsConnectedProvider: { true }
+        )
+
+        XCTAssertNil(viewModel.feedbackRiskWarningMessage)
+    }
+
+    func testFeedbackRiskConfirmationBlocksImmediateStart() async throws {
+        let credentialStore = InMemoryCredentialStore(
+            initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
+        )
+        let realtimeClient = ViewModelFakeRealtimeTranslationClient()
+        let runtime = TranslationRuntime(
+            credentialStore: credentialStore,
+            audioIO: ViewModelFakeTranslationAudioIO(),
+            realtimeClient: realtimeClient
+        )
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(settings: riskyPhoneSpeakerSettings()),
+            credentialStore: credentialStore,
+            runtime: runtime
+        )
+
+        viewModel.toggleTranslation()
+
+        XCTAssertTrue(viewModel.isFeedbackRiskConfirmationPresented)
+        XCTAssertEqual(viewModel.status, .ready)
+        XCTAssertNil(await realtimeClient.connectedTargetLanguageCode())
+    }
+
+    func testFeedbackRiskStartAnywayStartsRuntime() async throws {
+        let credentialStore = InMemoryCredentialStore(
+            initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
+        )
+        let realtimeClient = ViewModelFakeRealtimeTranslationClient()
+        let runtime = TranslationRuntime(
+            credentialStore: credentialStore,
+            audioIO: ViewModelFakeTranslationAudioIO(),
+            realtimeClient: realtimeClient
+        )
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(settings: riskyPhoneSpeakerSettings()),
+            credentialStore: credentialStore,
+            runtime: runtime
+        )
+
+        viewModel.toggleTranslation()
+        viewModel.startPendingTranslationDespiteFeedbackRisk()
+        try await waitForStatus(.listening, on: viewModel)
+
+        XCTAssertFalse(viewModel.isFeedbackRiskConfirmationPresented)
+        XCTAssertEqual(await realtimeClient.connectedTargetLanguageCode(), "en")
+        await runtime.stop()
+    }
+
+    func testFeedbackRiskUseHeadphonesSwitchesRouteAndStartsRuntime() async throws {
+        let credentialStore = InMemoryCredentialStore(
+            initialCredential: OpenAICredential(kind: .apiKey, value: "sk-test-12345678901234567890")
+        )
+        let realtimeClient = ViewModelFakeRealtimeTranslationClient()
+        let runtime = TranslationRuntime(
+            credentialStore: credentialStore,
+            audioIO: ViewModelFakeTranslationAudioIO(),
+            realtimeClient: realtimeClient
+        )
+        let viewModel = TranslationViewModel(
+            settingsStore: InMemorySettingsStore(settings: riskyPhoneSpeakerSettings()),
+            credentialStore: credentialStore,
+            runtime: runtime
+        )
+
+        viewModel.toggleTranslation()
+        viewModel.useHeadphonesForPendingFeedbackRisk()
+        try await waitForStatus(.listening, on: viewModel)
+
+        XCTAssertFalse(viewModel.isFeedbackRiskConfirmationPresented)
+        XCTAssertEqual(viewModel.audioOutputRoute, .headphones)
+        XCTAssertEqual(await realtimeClient.connectedTargetLanguageCode(), "en")
+        await runtime.stop()
     }
 
     func testFeedbackRiskWarningHiddenForHeadsetRouting() {
@@ -195,6 +307,14 @@ final class TranslationViewModelTests: XCTestCase {
         )
 
         XCTAssertNil(viewModel.feedbackRiskWarningMessage)
+    }
+
+    private func riskyPhoneSpeakerSettings() -> TranslationSettings {
+        TranslationSettings(
+            targetLanguageCode: "en",
+            audioInputSource: .builtIn,
+            audioOutputRoute: .deviceSpeaker
+        )
     }
     #endif
 

@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Auriculares</string>
     <string name="focus_background_title">Fondo de concentración</string>
     <string name="focus_background_body">Un audio suave rellena los silencios y baja bajo la voz traducida. Solo con auriculares.</string>
-    <string name="audio_feedback_title">Auriculares recomendados</string>
-    <string name="audio_feedback_warning">Usa auriculares para evitar acople de audio.</string>
+    <string name="audio_feedback_title">Usar auriculares</string>
+    <string name="audio_feedback_warning">Usa auriculares. El altavoz del teléfono puede volver a meter la traducción en el micrófono y hacer que Chuchotage se repita.</string>
     <string name="audio_feedback_start_anyway">Iniciar de todos modos</string>
     <string name="audio_feedback_use_headphones">Usar auriculares</string>
     <string name="permission_microphone_title">Se necesita acceso al micrófono</string>

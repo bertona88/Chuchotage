@@ -36,8 +36,9 @@ Chuchotage is audio-first, so user guidance should prevent bad listening setups 
 
 - Mobile app surfaces should gently remind users to wear headphones or earbuds for translated audio, especially in onboarding, permission/setup moments, settings, or first-run hints.
 - Do not make headphones mandatory for every mobile session, but explain that headphones reduce echo, avoid the phone microphone recapturing translated speech, and keep translated audio more private.
+- When a mobile user is about to run phone microphone input into phone-speaker translated output, including system-default output with no connected headphone/earbud route where detectable, show a start-time guard. Explain that the phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself. Offer a clear `Use headphones` path and keep `Start anyway` as an explicit opt-in.
 - Focus background may be offered as optional headphone-only masking for live acoustic bleed-through; keep it local, low, and ducked under translated speech.
-- Keep the reminder short and practical. Avoid alarmist copy.
+- Keep the reminder short, practical, and direct. Avoid alarmist or insulting copy.
 - If a user selects a headset or earbud microphone and it is unavailable, fail clearly instead of silently falling back to the wrong microphone.
 - On Android, keep audio-source selection in Settings. `Device audio` may be offered on Android 10+ through the platform playback-capture prompt, but copy must make clear that Android only exposes apps/audio that permit capture.
 - On iOS/iPadOS, same-device app-audio translation is possible only as a planned ReplayKit broadcast feature. Keep current iOS surfaces microphone-first until `docs/ios-replaykit-device-audio-plan.md` is implemented and real-device tests prove app audio, especially Zoom call audio, is capturable and usable.

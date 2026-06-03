@@ -64,8 +64,8 @@
     <string name="audio_output_headphones">Fones de ouvido</string>
     <string name="focus_background_title">Fundo de foco</string>
     <string name="focus_background_body">Um áudio suave preenche silêncios e baixa sob a fala traduzida. Somente com fones.</string>
-    <string name="audio_feedback_title">Fones recomendados</string>
-    <string name="audio_feedback_warning">Use fones para evitar retorno de áudio.</string>
+    <string name="audio_feedback_title">Usar fones</string>
+    <string name="audio_feedback_warning">Use fones. O alto-falante do telefone pode jogar a tradução de volta no microfone e fazer o Chuchotage se repetir.</string>
     <string name="audio_feedback_start_anyway">Iniciar mesmo assim</string>
     <string name="audio_feedback_use_headphones">Usar fones</string>
     <string name="permission_microphone_title">Acesso ao microfone necessário</string>

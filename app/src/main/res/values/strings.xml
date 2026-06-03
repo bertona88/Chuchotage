@@ -65,8 +65,8 @@
     <string name="audio_output_headphones">Headphones</string>
     <string name="focus_background_title">Focus background</string>
     <string name="focus_background_body">Soft background audio fills quiet gaps and ducks under translated speech. Headphones only.</string>
-    <string name="audio_feedback_title">Headphones recommended</string>
-    <string name="audio_feedback_warning">Use headphones to avoid audio feedback.</string>
+    <string name="audio_feedback_title">Use headphones</string>
+    <string name="audio_feedback_warning">Use headphones. The phone speaker can feed translated speech back into the mic and make Chuchotage repeat itself.</string>
     <string name="audio_feedback_start_anyway">Start anyway</string>
     <string name="audio_feedback_use_headphones">Use headphones</string>
     <string name="permission_microphone_title">Microphone access needed</string>
