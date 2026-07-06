@@ -169,6 +169,16 @@ Use this short-lived secret path when exchanging ChatGPT/Codex tokens or when a 
 
 When using an API key credential, the WebSocket can send the usual `session.update`. When using a Realtime Translation client secret, session configuration is already embedded in the client-secret request, so avoid sending a conflicting `session.update`.
 
+### 5.4 ChatGPT/Codex Auth Status
+
+Current probe report: `docs/chatgpt-codex-auth-realtime-probe-report.md`.
+
+As of the latest 2026-06-13 recheck, `~/.codex/auth.json` ChatGPT/Codex tokens can create Realtime and Realtime Translation client secrets, but the returned secrets fail when opening the Realtime WebSocket with `HTTP 500`. API-key-created Realtime Translation client secrets still work. The same ChatGPT/Codex tokens also fail normal OpenAI API endpoints such as `/v1/responses`, `/v1/models`, and `/v1/files`.
+
+Do not treat ChatGPT/Codex sign-in or imported Codex auth as a production-supported Realtime credential path unless a fresh end-to-end health check proves the full stream works: mint translation client secret, open `wss://api.openai.com/v1/realtime/translations?model=gpt-realtime-translate`, send audio, receive output audio/transcript events, send `session.close`, and receive `session.closed`.
+
+Production-supported credential paths should be a personal OpenAI API key, or sponsored-trial/server-minted Realtime Translation client secrets backed by a server-held OpenAI API key. Keep ChatGPT/Codex auth hidden, dev-only, or clearly fallback-gated while this status holds.
+
 ## 6. ChatGPT Login On Android
 
 - Browser sign-in is implemented in `network/ChatGptOAuthClient.kt`.
@@ -181,7 +191,7 @@ When using an API key credential, the WebSocket can send the usual `session.upda
 - Android devices can transiently fail DNS during browser-to-app handoff, especially with VPN/private DNS. Keep retries/backoff and user-visible messages around DNS or connection failures.
 - Store ChatGPT tokens through `SecureApiKeyStore`: `id_token`, `access_token`, `refresh_token`, and refresh timestamp.
 - Treat tokens like password-grade secrets. Never log or print their values.
-- Realtime Translate should not use the ChatGPT access token directly as the WebSocket bearer. `RealtimeTranslationClientSecretProvider` exchanges it for a short-lived Realtime Translation client secret.
+- Realtime Translate should not use the ChatGPT access token directly as the WebSocket bearer. `RealtimeTranslationClientSecretProvider` exchanges it for a short-lived Realtime Translation client secret. This path is currently not production-supported unless the end-to-end health check in section 5.4 passes.
 
 ## 7. Website And Privacy Policy
 

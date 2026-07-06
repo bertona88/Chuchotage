@@ -3,6 +3,8 @@
 
 NEW TICKETS AND PRODUCT GUIDELINES
 - Triaged 2026-06-03: mobile headphone feedback-loop parity is tracked as CHU-026.
+- Triaged 2026-06-03: iOS same-device media/app-audio translation uses ReplayKit, specifically a Broadcast Upload Extension, and is tracked as CHU-019.
+- Triaged 2026-06-03: stale board cleanup marked Android public-release work and beta-signup cleanup done, moved Windows process-loopback from prototype build to validation, and updated outreach to the current linguistics/interpreting CRM batch.
 
 
 
@@ -12,95 +14,70 @@ Status values: `Backlog`, `Ready`, `In Progress`, `Blocked`, `Done`.
 
 ## Current Product Priority
 
-State 2026-05-25:
-- Chuchotage has enough product surface for the next pass. Prefer validation, release readiness, spend control, and packaging over adding a new major mode.
+State 2026-06-03:
+- Chuchotage is now publicly listed on both iOS and Android. Prefer validation, spend control, privacy/listing accuracy, hardware smoke, and platform packaging over adding a new major mode.
 - Near-term order:
-  1. Stabilize and split the current dirty worktree so Android, Apple, website, marketing, and server changes can be reasoned about separately.
-  2. Make an explicit sponsored-trial launch decision: either finish quota/accounting/UX and ship it, or hide it from the first public Android release.
-  3. Treat Android as the next public-channel candidate because iOS is already public and Android production access is the nearest product unlock.
-  4. Run Apple hardware smoke tests before doing more Apple feature work.
-  5. Build the Windows process-loopback exclusion prototype before polishing the desktop UI further.
-  6. Keep marketing/outreach lightweight and tied to the product promise that is actually shippable today.
+  1. Stabilize and split the current dirty worktree so Android, Apple, website, marketing, server, and Windows changes can be reasoned about separately.
+  2. Keep Android/iOS public-store behavior and privacy/listing claims aligned with the app that is actually shipping.
+  3. Decide the ongoing sponsored-trial posture: keep the soft-capped path live with better accounting, or hide/tighten it if spend or abuse signals appear.
+  4. Run real hardware smoke where repo tests cannot answer the question: Android/iPhone headphone routes, Apple auth/audio, and Windows process-loopback capture.
+  5. Keep iOS ReplayKit and Windows audio-capture work evidence-led; do not claim source-app audio behavior until real devices prove it.
+  6. Keep marketing/outreach lightweight and tied to the public product promise that is actually shippable today.
 
 ## Board
 
-### CHU-001 - Auth Provider Abstraction
+### CHU-001 - Android Auth And Credential Readiness
 
 Status: In Progress
 Priority: P1
-Area: Android / Network / Architecture
+Area: Android / Network / Compose UX / Debug
 
-Build a first-class auth-provider layer so API key, ChatGPT/Codex-token, and sponsored-trial credentials expose the same runtime contract.
+Keep all Android auth and credential paths production-ready behind one provider/onboarding surface: personal API key, ChatGPT/Codex login, and optional sponsored trial credentials.
 
 Acceptance:
-- Define provider concepts equivalent to `isAvailable()`, `getRealtimeSessionCredential()`, `refreshCredentialIfNeeded()`, `revokeOrClear()`, `displayName`, and debug-only risk/status metadata.
-- Keep personal API key and ChatGPT/Codex paths functional.
-- Leave room for sponsored trial credentials without making normal app use require a Chuchotage backend.
-- Add focused tests around provider selection and token/session-update behavior.
+- API key, ChatGPT/Codex-token, and sponsored-trial credentials expose the same provider concepts: `isAvailable()`, `getRealtimeSessionCredential()`, `refreshCredentialIfNeeded()`, `revokeOrClear()`, `displayName`, and debug-only risk/status metadata.
+- Provider selection produces the correct Realtime Translation credential and session configuration. API-key sessions may send the usual session config; client-secret sessions avoid conflicting `session.update` calls.
+- First-run UX stays ChatGPT-first, with `I don't have ChatGPT` opening the sponsored path and `Use an OpenAI API key` available as the manual fallback.
+- API-key fallback copy explains the local-storage privacy shape, including copy equivalent to `Your key stays on this device.`
+- Sponsored-trial auth generates and stores a random install ID through the secure/local preference path, avoids hardware identifiers, and has clear quota/expiry fallback to ChatGPT sign-in or API-key mode.
+- Debug builds may show provider availability, credential freshness, session-token mode, and risk/status metadata. Release builds stay clean, and no raw API keys, ChatGPT tokens, refresh tokens, or client secrets are displayed or logged.
+- Add focused tests around provider selection, credential freshness, token/session-update behavior, and auth reducer/UX state where practical.
+- Android post-launch/device smoke covers API-key auth, ChatGPT login/client-secret exchange, sponsored trial if enabled, and start/stop cleanup on a real device.
 
 State 2026-05-17:
 - Implemented `TranslationSessionTokenProvider` with API key, ChatGPT, and sponsored-trial providers.
 - `TranslationForegroundService` now consumes the active provider instead of routing credential kinds inline.
-- Local unit tests and debug build pass; still needs real Android device/end-to-end translation-session testing before marking Done.
-- Provider-selection tests and richer debug metadata are still pending.
-
-State 2026-05-25:
-- Keep this open until the Android release-candidate device pass covers API-key, ChatGPT, and sponsored-trial/session-token paths end to end.
-- Provider-selection tests are still useful, but release confidence now depends more on real-device auth and session behavior than more abstraction work.
-
-### CHU-002 - Validate ChatGPT/Codex Token Production Viability
-
-Status: Done
-Priority: P1
-Area: Android / OpenAI / Product Risk
-
-Validate the existing ChatGPT/Codex-token path before treating it as production-safe.
-
-Acceptance:
-- Confirm whether the flow is technically stable on Android devices.
-- Confirm whether the flow is allowed by current OpenAI terms and policies.
-- Confirm whether it survives Google Play review expectations.
-- Confirm whether ChatGPT/Codex credentials can reliably create Realtime Translation client secrets.
-- Record results in repo docs without printing or storing tokens.
-
-State 2026-05-17:
-- Current ChatGPT/Codex-token path works in practice on the tested Android flow.
-- ChatGPT/Codex credentials can currently be exchanged for Realtime Translation client secrets and used for active translation.
-- Remaining risk is external continuity risk: OpenAI product/API/terms or Google Play interpretation could change later. Revisit if any of those signals change.
-- No tokens, secrets, or credential values were recorded.
-
-### CHU-003 - Rework First-Run Auth UX
-
-Status: Done
-Priority: P2
-Area: Android / Compose UX
-
-Change onboarding from a technical two-tab credential screen into the intended entry flow.
-
-Acceptance:
-- Primary action: `Sign in with ChatGPT`.
-- Secondary action: `I don't have ChatGPT`.
-- Manual fallback: `Use an OpenAI API key`.
-- Keep callback/access-token fallback available without making it feel like the main path.
-- Keep privacy policy and website links visible but calm.
-
-State 2026-05-17:
+- Current ChatGPT/Codex-token path worked in practice on the tested Android flow, and those credentials could be exchanged for Realtime Translation client secrets.
 - Reworked Android first-run auth into a ChatGPT-first entry screen with `I don't have ChatGPT` and `Use an OpenAI API key` as secondary/manual paths.
 - Callback URL/access-token paste remains available behind a quiet fallback and during active ChatGPT sign-in.
-- Local `testDebugUnitTest assembleDebug` passed with the repo's Mac JDK/Android SDK command.
+- Implemented sponsored-trial credential kind backed by a generated UUID stored through the secure credential store; no hardware identifiers are used.
+- Added a first-run `Trial` auth mode that enables sponsored trial translation.
+- Local unit tests and debug build passed; no tokens, secrets, or credential values were recorded.
 
-### CHU-004 - Sponsored Trial Backend Design
+State 2026-05-25:
+- Keep this open until the Android device pass covers API-key, ChatGPT, and sponsored-trial/session-token paths end to end.
+- Remaining follow-up: real-device auth/session smoke, provider-selection tests, richer debug metadata, and a short developer note about reinstall/reset behavior.
+
+State 2026-06-03:
+- Consolidated the previous auth-related board items into this ticket: ChatGPT/Codex viability, first-run auth UX, sponsored-trial install ID, sponsored-trial auth/onboarding UX, API-key mode copy, and debug auth diagnostics.
+- Keep external continuity risk visible: OpenAI product/API/terms or Google Play interpretation could change later. Revisit if those signals change.
+- API-key privacy copy is now present as `Your key is stored on this device and used only during active translation.`
+- Sponsored-trial UX has the intended first-run entry point and actionable limit fallback copy. Keep this ticket open for provider-contract polish, debug metadata, tests, and real-device auth/session smoke.
+
+### CHU-004 - Sponsored Trial Accounting And Guardrails
 
 Status: In Progress
 Priority: P1
 Area: Backend / Product / Security
 
-Design the optional sponsored/free trial backend that issues short-lived Realtime Translation credentials while enforcing an early budget guardrail.
+Finish the optional sponsored/free trial backend guardrails now that the client-secret endpoint exists.
 
 Acceptance:
-- Define API endpoints for trial status and client-secret issuance.
+- Keep the client-secret issuance endpoint functional.
+- Add a trial-status endpoint if the app needs explicit remaining/quota state instead of relying only on client-secret errors.
 - Track `install_id`, minutes used, sessions started, timestamps, optional hashed IP, and basic rate limits.
 - Enforce max session duration and quota server-side.
+- Keep or add an emergency disable flag for sponsored trial.
 - Keep anti-abuse simple; avoid hardware fingerprinting or invasive tracking.
 - Keep this clearly optional so API-key and ChatGPT/Codex modes remain backend-free.
 
@@ -115,50 +92,13 @@ State 2026-05-25:
 - Minimum public guardrails: server-side install-id/IP rate limits, short client-secret TTL, max session duration, clear quota/expiry UX, an emergency disable flag, and a small OpenAI project budget cap.
 - Accept the known risk that reinstalling may reset an app-local install ID. If abuse appears, harden later with Google Play Integrity Device Recall or account-backed trial identity.
 
-### CHU-005 - Sponsored Trial Android Install ID
-
-Status: In Progress
-Priority: P2
-Area: Android / Storage / Privacy
-
-Generate and store a random install ID for sponsored trial accounting.
-
-Acceptance:
-- Generate UUID on first use of sponsored mode.
-- Store locally through the app's secure/local preference path.
-- Do not use hardware identifiers.
-- Explain reinstall behavior in developer docs or ticket notes.
-
-State 2026-05-17:
-- Implemented sponsored-trial credential kind backed by a generated UUID stored through the secure credential store.
-- No hardware identifiers are used.
-- Still needs device validation and a short developer-doc note about reinstall/reset behavior.
-
-### CHU-006 - Sponsored Trial UX
-
-Status: In Progress
-Priority: P2
-Area: Android / Compose UX
-
-Add the calm free-mode screens and state for the sponsored trial.
-
-Acceptance:
-- `I don't have ChatGPT` opens the sponsored path.
-- Show `Try Chuchotage free` and `10 minutes sponsored by Chuchotage.`
-- Show remaining time during sponsored use.
-- Expiry copy offers ChatGPT sign-in or OpenAI API key without dark patterns.
-
-State 2026-05-17:
-- Added a first-run `Trial` auth mode that enables sponsored trial translation.
-- Full intended UX is not complete yet: remaining time, quota/expiry states, and polished `I don't have ChatGPT` flow still need work.
-
-State 2026-05-25:
-- Sponsored trial is allowed to ship as a soft launch path. Keep copy modest and make expiry/fallback states clear.
-- Do not overbuild remaining-time precision for v1; a simple `trial limit reached` state plus ChatGPT/API-key fallback is enough if server limits are enforced.
+State 2026-06-03:
+- The endpoint design itself is no longer the work: `POST /api/trial/realtime-translation-client-secret` exists, validates install IDs, applies in-memory IP/install-id rate limits, and creates 10-minute Realtime Translation client secrets.
+- Remaining work is persistent accounting, minutes-used tracking, explicit max-session/quota enforcement beyond short token TTL/rate limits, emergency disable behavior, and budget monitoring.
 
 ### CHU-007 - Sponsored Mode Privacy And Play Docs
 
-Status: In Progress
+Status: Done
 Priority: P1
 Area: Docs / Privacy / Release
 
@@ -176,7 +116,11 @@ State 2026-05-17:
 - Play Data Safety notes and release-review guidance still need a dedicated pass before shipping a release with sponsored trial enabled.
 
 State 2026-05-25:
-- Still needed before a sponsored-trial Android release. Also add short meeting/class consent guidance because tester feedback surfaced privacy expectations for organizational use.
+- Previously waiting on Play Data Safety/release-review guidance and meeting/class consent guidance. The release-docs portion is now closed; CHU-024 tracks consent copy.
+
+State 2026-06-03:
+- Marked Done for the sponsored-mode release-docs pass. Privacy and repo docs now distinguish backend-free credential modes from backend-mediated sponsored trial, and the public Google Play listing has Data safety declarations.
+- Meeting/class consent copy is tracked separately as CHU-024 so this ticket does not stay open for unrelated trust copy.
 
 ### CHU-008 - Realtime Pricing And Budget Monitoring
 
@@ -184,10 +128,10 @@ Status: Ready
 Priority: P1
 Area: Product / OpenAI / Operations
 
-Create a launch checklist for current Realtime Translation pricing and experiment-budget monitoring.
+Create or refresh the ongoing checklist for current Realtime Translation pricing and sponsored-trial experiment-budget monitoring.
 
 Acceptance:
-- Verify current `gpt-realtime-translate` pricing before launch.
+- Verify current `gpt-realtime-translate` pricing before changing quotas, budget caps, or public trial size.
 - Estimate cost for 10 sponsored minutes per install.
 - Define a 1000 EUR experiment budget guardrail.
 - Document where usage and spend should be monitored.
@@ -196,6 +140,9 @@ State 2026-05-25:
 - Do this before or during the sponsored soft launch, but do not block launch on a perfect quota ledger.
 - Current working assumption from official pricing checked on 2026-05-25: `gpt-realtime-translate` is roughly USD 0.034 per audio minute, so a 10-minute trial costs about USD 0.34 per activated trial install before overhead.
 - Use a small OpenAI project budget cap and monitor early usage manually. If usage spikes, disable trial first and harden quota second.
+
+State 2026-06-03:
+- Still open, but no longer a pre-Android-launch item. Treat it as ongoing sponsored-trial spend hygiene and re-check official pricing before changing quota, budget caps, or public trial size.
 
 ### CHU-009 - Local VAD And Silence Gating
 
@@ -220,6 +167,9 @@ Acceptance:
 
 State 2026-05-25:
 - Defer until after the Android release/trial-safety decision unless usage costs force it sooner. Aggressive gating remains risky because Realtime Translation expects continuous audio including silence.
+
+State 2026-06-03:
+- Android is now public, but this is still not a stale implementation ticket. Keep deferred unless sponsored-trial costs make silence gating urgent, because the continuous-audio translation risk remains unresolved.
 
 ### CHU-010 - Idle And Safety Auto-Stop
 
@@ -258,7 +208,7 @@ State 2026-05-17:
 - Manual headset/device matrix still remains.
 
 State 2026-05-25:
-- Fold this into the Android release-candidate smoke matrix: phone speaker, wired headset, USB audio, Bluetooth classic/SCO, and BLE where available.
+- Fold this into the Android post-launch smoke matrix: phone speaker, wired headset, USB audio, Bluetooth classic/SCO, and BLE where available.
 
 ### CHU-012 - Headphone Feedback Guard
 
@@ -324,7 +274,7 @@ State 2026-05-17:
 
 ### CHU-014 - Reconcile Main Screen Source Visibility
 
-Status: Backlog
+Status: Done
 Priority: P3
 Area: Android / Product Design
 
@@ -334,6 +284,10 @@ Acceptance:
 - Decide whether to show a small read-only current source on the main translate tab.
 - If product guidance changes, update `docs/product-design-guidelines.md` and `app/AGENTS.md`.
 - Keep the main screen sparse.
+
+State 2026-06-03:
+- Marked Done. Current product guidance keeps Android audio-source selection in Settings and keeps the main translate tab focused on start/stop, status, transcript, and the compact output-language selector.
+- No main-screen source label is needed unless new user evidence reopens the decision.
 
 ### CHU-015 - Reconcile Transcript Product Stance
 
@@ -353,35 +307,9 @@ State 2026-05-17:
 - Product boundary remains ephemeral: transcripts are in-memory session UI only, cleared on stop, with no persistence, history, analytics, logs, sync, export, or Chuchotage backend storage.
 - Aligned repo-wide, Android-local, and shared product guidance.
 
-### CHU-016 - API Key Mode Copy Polish
-
-Status: Ready
-Priority: P3
-Area: Android / Compose UX
-
-Improve manual API-key mode copy so users understand the local-storage privacy shape.
-
-Acceptance:
-- Add copy equivalent to `Your key stays on this device.`
-- Keep API key as an advanced/manual fallback, not the primary route.
-- Keep secure storage unchanged.
-
-### CHU-017 - Debug Auth Diagnostics
-
-Status: Backlog
-Priority: P3
-Area: Android / Debug UX
-
-Expose provider risk/status metadata only in debug builds.
-
-Acceptance:
-- Show provider availability, credential freshness, and session-token mode in debug builds only.
-- Never print or display raw API keys, ChatGPT tokens, refresh tokens, or client secrets.
-- Keep release UI clean.
-
 ### CHU-018 - Remove Beta Signup After Beta Ends
 
-Status: In Progress
+Status: Done
 Priority: P3
 Area: Website / Backend / Operations
 
@@ -402,45 +330,60 @@ State 2026-05-24:
 State 2026-05-25:
 - Product-facing cleanup is mostly done. The remaining action is operational naming, so do it only when touching deployment/service management next.
 
-### CHU-019 - iOS ReplayKit Device Audio Translation
+State 2026-06-03:
+- Marked Done for repository/product cleanup. `/api/beta` remains removed with a server test, public website signup surfaces are gone, and docs now say not to reintroduce beta-signup naming.
+- If a deployed unit is still named `chuchotage-beta`, treat that as operator-local service maintenance rather than keeping this product ticket open.
+
+### CHU-019 - iOS ReplayKit Media Audio Translation
 
 Status: Backlog
 Priority: P2
 Area: Apple / Audio / Product Research
 
-Investigate and implement the possible iOS/iPadOS equivalent of Android `Device audio` through a ReplayKit Broadcast Upload Extension.
+Investigate and implement the possible iOS/iPadOS equivalent of Android `Device audio`: translating media or app audio coming from the same iPhone/iPad through a ReplayKit Broadcast Upload Extension.
 
 Plan:
 - Follow `docs/ios-replaykit-device-audio-plan.md`.
 
 Acceptance:
+- Add a clear iOS app entry point for starting the ReplayKit broadcast flow, likely through `RPSystemBroadcastPickerView` or the best current Apple-supported equivalent.
 - Add a debug-only ReplayKit broadcast probe that meters `audioApp` and `audioMic` buffers without storing content.
-- Validate real iPhone and iPad behavior with Zoom, browser/video playback, and headphones/Bluetooth/speaker routes.
-- If Zoom audio is capturable, convert ReplayKit audio buffers to mono PCM16 at 24 kHz and feed the existing Realtime Translation path.
+- Validate real iPhone and iPad behavior with Zoom, YouTube/browser media, other ordinary media playback, and headphones/Bluetooth/speaker routes.
+- If same-device media/app audio is capturable, convert ReplayKit `audioApp` buffers to mono PCM16 at 24 kHz and feed the existing Realtime Translation path.
+- Keep the product honest about platform limits: ReplayKit may provide audio buffers, but it may not provide app-volume control or capture privacy-sensitive call audio from every source app.
 - Keep screen/video buffers discarded and keep transcripts ephemeral.
 - Add explicit Settings, permission, privacy, TestFlight, and App Review copy before exposing any user-facing iOS `Device audio` option.
 - If ReplayKit cannot reliably capture Zoom/app audio, keep the feature blocked and prefer Zoom RTMS/SDK as the Zoom-specific path.
 
 State 2026-05-25:
-- Keep this behind Apple hardware smoke and Android public-release work. Do not expose iOS `Device audio` copy until ReplayKit evidence exists on real devices.
+- Keep this behind Apple hardware smoke. Do not expose iOS `Device audio` copy until ReplayKit evidence exists on real devices.
 
-### CHU-020 - Android Release Candidate Pass
+State 2026-06-03:
+- User-facing shorthand: this is the "kit thing" for translating media coming from the phone. The concrete Apple framework is ReplayKit, and the implementation shape is a Broadcast Upload Extension that receives `audioApp` sample buffers during a user-approved screen broadcast.
+- Existing notes are in `docs/ios-replaykit-device-audio-plan.md`.
+- Android public release is no longer a blocker for this ticket; the blocker is iOS/iPadOS ReplayKit proof on real hardware.
 
-Status: Ready
+### CHU-020 - Android Public Google Play Release
+
+Status: Done
 Priority: P1
 Area: Android / Release / Product
 
-Turn the current Android build into a conservative public-release candidate.
+Turn the Android build into a conservative public Google Play release.
 
 Acceptance:
-- Run `./gradlew test` and `./gradlew assembleDebug` or release-equivalent validation before candidate handoff.
+- Run `./gradlew test` and `./gradlew assembleDebug` or release-equivalent validation before release handoff.
 - Real-device smoke: API-key auth, ChatGPT login/client-secret exchange, sponsored trial if enabled, phone mic, headset mic, Android device audio, foreground notification stop, widget toggle/backoff, transcript panes, and start/stop cleanup.
 - Ship sponsored trial only as a soft capped path: install-id/IP rate limits, short secret TTL, max session duration, emergency disable flag, and small OpenAI project budget cap.
 - Verify Play listing/app-content claims still match the shipped behavior.
 - Avoid direct APK distribution for normal testers; prefer Play testing and production-track flow.
 
 State 2026-05-25:
-- This is the highest-leverage product move because iOS is already public and Android is the nearest unreleased public platform.
+- This was the highest-leverage product move when Android production access was still the nearest public-platform unlock.
+
+State 2026-06-03:
+- Marked Done. Android is publicly listed on Google Play, and the repo-wide guidance/README now treat Android as a public platform.
+- Future Android work should be tracked as post-launch validation, bug fixes, listing/privacy accuracy, or sponsored-trial guardrails instead of reopening this release ticket.
 
 ### CHU-025 - Sponsored Trial Reinstall Hardening
 
@@ -477,42 +420,50 @@ Acceptance:
 State 2026-05-25:
 - The shared Apple layer is already strong; real-device behavior is the blocker.
 
-### CHU-022 - Windows Process Loopback Exclusion Prototype
+### CHU-022 - Windows Process Loopback Exclusion Validation
 
-Status: Ready
+Status: In Progress
 Priority: P2
 Area: Windows / Audio / Architecture
 
-Prototype capture of PC audio while excluding Chuchotage translated playback, so single-headset desktop use can work without admin rights or virtual drivers.
+Validate the implemented Windows process-loopback exclusion path so single-headset desktop use can work without admin rights or virtual drivers on supported Windows builds.
 
 Acceptance:
-- Add a capture backend alongside endpoint loopback rather than replacing the current path.
-- Use Windows process-loopback exclusion where available, targeting the backend or Electron process tree after verification.
-- First validate to a WAV file or local PCM sink before wiring OpenAI translation.
-- Confirm captured PCM contains browser/Teams/media audio and excludes Chuchotage playback.
+- Keep the capture backend alongside endpoint loopback rather than replacing the current path.
+- Use Windows process-loopback exclusion where available, targeting the backend process tree unless validation proves the Electron parent process is the better exclusion target.
+- On a Windows machine, confirm captured PCM contains browser/Teams/media audio and excludes Chuchotage playback.
+- Validate Bluetooth/headset and communications-device behavior on at least one supported Windows build.
 - Keep the Electron UI current; do not revive the removed WinForms UI.
-- After backend proof, simplify UI language toward `Single headset` and `Separate devices`.
+- Keep UI language centered on `Single headset` and `Separate devices`.
 
 State 2026-05-25:
 - Do this before more Windows UI polish. The current audio-session mixer proved a limitation, not the final architecture.
 
-### CHU-023 - First Outreach Batch
+State 2026-06-03:
+- Prototype implementation is no longer pending: `ProcessExcludingLoopbackAudioCapture` exists, `TranslationRuntime` selects it for same-device routing, Electron exposes `Single headset` / `Separate devices`, and `windows/README.md` documents the process-loopback path.
+- Remaining work is real Windows validation, especially captured PCM content, Chuchotage-playback exclusion, Bluetooth/headset behavior, and source-app volume interactions.
+
+### CHU-023 - First Linguistics Outreach Batch
 
 Status: Ready
 Priority: P2
 Area: Marketing / CRM / Learning
 
-Run the first small outreach motion to learn who responds to the current product promise.
+Run the first small founder-led outreach motion to learn which linguistics, didactics, and interpreting-adjacent contacts respond to the current product promise.
 
 Acceptance:
-- Re-check source pages for the five active school/parent-association leads.
-- Draft one personalized email per organization from `andrea@chuchotage.ai`.
+- Re-check source pages for the current high-priority leads in `marketing/crm/leads.csv`.
+- Draft three to five personalized emails from `andrea@chuchotage.ai`.
 - Ask for explicit approval before sending.
 - After sending, update `marketing/crm/leads.csv` status/stage and append `marketing/crm/outreach-log.csv`.
 - Review replies before touching second-wave or fallback contacts.
 
 State 2026-05-25:
 - Keep this small until Android release readiness and trial-safety questions are resolved. Outreach should sell the current listen-along product, not future conversation mode.
+
+State 2026-06-03:
+- The old school/parent-association wording was stale. The current CRM batch is linguistics, didactics, research-center, and interpreting-adjacent leads.
+- Android is public now, but outreach should still stay small and ask for feedback, not endorsement.
 
 ### CHU-024 - Product Privacy And Meeting Consent Copy
 
@@ -526,7 +477,11 @@ Acceptance:
 - Add short copy to product/design guidance and release-review notes.
 - Keep it factual: Chuchotage sends selected live audio to OpenAI for translation during active sessions.
 - Do not imply transcript/audio storage, analytics, recording, or a Chuchotage audio relay.
-- Decide whether Android Settings, website FAQ/privacy, or Play review notes need the copy before public release.
+- Decide whether Android Settings, website FAQ/privacy, or future store-review notes need the copy in the next release/listing pass.
 
 State 2026-05-25:
 - Tester feedback surfaced this as a trust issue. It is small copy work with high policy and user-confidence value.
+
+State 2026-06-03:
+- Still open, but no longer a before-public-release blocker because Android is already public.
+- Partial notes exist in `docs/android-initial-test-feedback.md` and `docs/google-play-production-access-draft.md`; the remaining work is to put concise reusable guidance into product/design guidance and whichever user-facing surfaces should carry it.
