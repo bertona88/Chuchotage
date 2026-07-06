@@ -2566,6 +2566,10 @@ private enum class ChatGptSignInUiState {
     Failed,
 }
 
+// Codex App Server auth is Codex-scoped and is not a production-supported
+// Realtime Translation credential for this Android app.
+private const val CHATGPT_SIGN_IN_AVAILABLE = false
+
 @Composable
 private fun AuthSetupScreen(
     onSaveApiKey: (String) -> Unit,
@@ -2582,7 +2586,7 @@ private fun AuthSetupScreen(
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var signInState by rememberSaveable { mutableStateOf(ChatGptSignInUiState.Idle) }
     var signInJob by remember { mutableStateOf<Job?>(null) }
-    val isChatGptMode = false
+    val isChatGptMode = CHATGPT_SIGN_IN_AVAILABLE && mode == AuthSetupMode.ChatGpt
     val isApiKeyMode = mode == AuthSetupMode.ApiKey
     val isSponsoredTrialMode = mode == AuthSetupMode.SponsoredTrial
     val isSignInActive = signInState.isActive

@@ -1,8 +1,6 @@
 package com.andreabertoncini.chuchotage.network
 
 import kotlinx.coroutines.test.runTest
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -63,81 +61,27 @@ class RealtimeTranslationClientSecretProviderTest {
     }
 
     @Test
-    fun unauthorizedChatGptClientSecretRetriesAfterRefresh() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(MockResponse().setResponseCode(401).setBody("""{"error":{"message":"expired"}}"""))
-            server.enqueue(MockResponse().setResponseCode(200).setBody("""{"value":"refreshed-client-secret"}"""))
-            server.start()
-            val provider = RealtimeTranslationClientSecretProvider(
-                clientSecretUrl = server.url("/client_secrets").toString(),
-                retryDelaysMs = longArrayOf(0),
-            )
-            val oldCredential = OpenAiCredential(
-                kind = OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN,
-                value = "old-access-token",
-                refreshToken = "refresh-token",
-            )
-            val refreshedCredential = oldCredential.copy(value = "new-access-token")
+    fun apiKeyUsesDirectRealtimeBearerToken() = runTest {
+        val token = RealtimeTranslationClientSecretProvider().sessionBearerTokenFor(
+            credential = OpenAiCredential(OpenAiCredentialKind.API_KEY, "sk-proj-abcdefghijklmnopqrstuvwxyz"),
+            targetLanguageCode = "ja",
+        )
 
-            val token = provider.sessionBearerTokenFor(
-                credential = oldCredential,
-                targetLanguageCode = "ja",
-                refreshCredentialAfterUnauthorized = { refreshedCredential },
-            )
-
-            assertEquals("refreshed-client-secret", token.value)
-            assertEquals(false, token.shouldSendSessionUpdate)
-            assertEquals(OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN, token.credentialKind)
-            val firstRequest = server.takeRequest()
-            val secondRequest = server.takeRequest()
-            assertEquals("Bearer old-access-token", firstRequest.getHeader("Authorization"))
-            assertEquals("Bearer new-access-token", secondRequest.getHeader("Authorization"))
-            assertEquals(OpenAiRequestHeaders.userAgent, firstRequest.getHeader("User-Agent"))
-            assertEquals(OpenAiRequestHeaders.userAgent, secondRequest.getHeader("User-Agent"))
-        }
+        assertEquals("sk-proj-abcdefghijklmnopqrstuvwxyz", token.value)
+        assertEquals(true, token.shouldSendSessionUpdate)
+        assertEquals(OpenAiCredentialKind.API_KEY, token.credentialKind)
     }
 
     @Test
-    fun clientSecretRetriesServerErrors() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(MockResponse().setResponseCode(500).setBody("""{"error":{"message":"try again"}}"""))
-            server.enqueue(MockResponse().setResponseCode(200).setBody("""{"value":"client-secret"}"""))
-            server.start()
-            val provider = RealtimeTranslationClientSecretProvider(
-                clientSecretUrl = server.url("/client_secrets").toString(),
-                retryDelaysMs = longArrayOf(0, 0),
-            )
-
-            val token = provider.sessionBearerTokenFor(
+    fun chatGptAccessTokenIsRejectedBeforeClientSecretRequest() = runTest {
+        val exception = runCatching {
+            RealtimeTranslationClientSecretProvider().sessionBearerTokenFor(
                 credential = OpenAiCredential(OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN, "access-token"),
                 targetLanguageCode = "ja",
             )
+        }.exceptionOrNull()
 
-            assertEquals("client-secret", token.value)
-            assertEquals(2, server.requestCount)
-        }
-    }
-
-    @Test
-    fun clientSecretServerFailureUsesFriendlyMessage() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(MockResponse().setResponseCode(500).setBody("""{"error":{"message":"try again"}}"""))
-            server.enqueue(MockResponse().setResponseCode(500).setBody("""{"error":{"message":"still down"}}"""))
-            server.start()
-            val provider = RealtimeTranslationClientSecretProvider(
-                clientSecretUrl = server.url("/client_secrets").toString(),
-                retryDelaysMs = longArrayOf(0, 0),
-            )
-
-            val exception = runCatching {
-                provider.sessionBearerTokenFor(
-                    credential = OpenAiCredential(OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN, "access-token"),
-                    targetLanguageCode = "ja",
-                )
-            }.exceptionOrNull()
-
-            assertTrue(exception is IllegalStateException)
-            assertTrue(exception?.message.orEmpty().contains("Could not create a translation client secret"))
-        }
+        assertTrue(exception is IllegalStateException)
+        assertTrue(exception?.message.orEmpty().contains("ChatGPT sign-in is not available"))
     }
 }

@@ -30,26 +30,13 @@ class RealtimeTranslationClientSecretProvider(
         sourceTranscriptEnabled: Boolean = false,
         refreshCredentialAfterUnauthorized: suspend () -> OpenAiCredential? = { null },
     ): RealtimeTranslationSessionToken {
-        val sanitizedTargetLanguageCode = TranslationLanguages.sanitizeOutputLanguageCode(targetLanguageCode)
         return when (credential.kind) {
             OpenAiCredentialKind.API_KEY -> RealtimeTranslationSessionToken(
                 value = credential.value,
                 shouldSendSessionUpdate = true,
                 credentialKind = OpenAiCredentialKind.API_KEY,
             )
-            OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN -> {
-                val clientSecret = createClientSecretWithRefreshRetry(
-                    credential = credential,
-                    targetLanguageCode = sanitizedTargetLanguageCode,
-                    sourceTranscriptEnabled = sourceTranscriptEnabled,
-                    refreshCredentialAfterUnauthorized = refreshCredentialAfterUnauthorized,
-                )
-                RealtimeTranslationSessionToken(
-                    value = clientSecret,
-                    shouldSendSessionUpdate = false,
-                    credentialKind = OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN,
-                )
-            }
+            OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN -> error(CHATGPT_REALTIME_UNSUPPORTED_MESSAGE)
             OpenAiCredentialKind.SPONSORED_TRIAL -> error(
                 "Sponsored trial client secrets are requested from the Chuchotage backend.",
             )
@@ -231,6 +218,9 @@ class RealtimeTranslationClientSecretProvider(
         private const val CLIENT_SECRET_URL = "https://api.openai.com/v1/realtime/translations/client_secrets"
         private const val CLIENT_SECRET_TTL_SECONDS = 600
         private const val REAUTHENTICATE_MESSAGE = "ChatGPT sign-in expired. Sign in again."
+        private const val CHATGPT_REALTIME_UNSUPPORTED_MESSAGE =
+            "ChatGPT sign-in is not available for Realtime Translation on Android. " +
+                "Use Chuchotage translation access or an OpenAI API key."
         private val CLIENT_SECRET_RETRY_DELAYS_MS = longArrayOf(250, 500, 1_000, 2_000)
         private val JSON_MEDIA_TYPE = "application/json".toMediaType()
     }
