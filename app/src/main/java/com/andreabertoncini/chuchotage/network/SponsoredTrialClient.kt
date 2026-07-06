@@ -31,6 +31,7 @@ class SponsoredTrialClient(
         return RealtimeTranslationSessionToken(
             value = clientSecret,
             shouldSendSessionUpdate = false,
+            credentialKind = OpenAiCredentialKind.SPONSORED_TRIAL,
         )
     }
 
@@ -71,21 +72,21 @@ class SponsoredTrialClient(
                         }
                         response.code == 429 -> throw SponsoredTrialException(
                             messageFrom(payload)
-                                ?: "Sponsored trial limit reached. Sign in with ChatGPT or use an API key to continue.",
+                                ?: "Chuchotage translation access is busy right now. Try again shortly.",
                         )
                         response.code == 403 -> throw SponsoredTrialException(
                             messageFrom(payload)
-                                ?: "Sponsored trial is not available right now.",
+                                ?: "Chuchotage translation access is not available right now.",
                         )
                         response.code == 503 -> throw SponsoredTrialException(
-                            "Sponsored trial is not available right now. Sign in with ChatGPT or use an API key to continue.",
+                            "Chuchotage translation access is not available right now. Try again shortly.",
                         )
                         response.code in 500..599 -> {
                             if (attempt < retryDelaysMs.lastIndex) {
                                 delay(delayMs)
                             } else {
                                 throw SponsoredTrialException(
-                                    "Could not start sponsored trial. Check the phone's network and try again.",
+                                    "Could not start Chuchotage translation access. Check the phone's network and try again.",
                                 )
                             }
                         }

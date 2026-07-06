@@ -28,6 +28,16 @@ class SecureApiKeyStore(context: Context) {
         return credential.takeIf { OpenAiCredentialValidator.isPlausible(it) }
     }
 
+    fun loadCredentialReplacingLegacyClientCredential(): OpenAiCredential? {
+        val credential = loadCredential() ?: return null
+        return if (credential.kind == OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN) {
+            saveSponsoredTrialInstallId()
+            loadCredential()
+        } else {
+            credential
+        }
+    }
+
     fun saveApiKey(value: String) {
         val apiKey = OpenAiCredentialValidator.normalize(value)
         require(OpenAiCredentialValidator.isPlausibleApiKey(apiKey)) {
@@ -65,6 +75,16 @@ class SecureApiKeyStore(context: Context) {
         }
 
         saveCredential(OpenAiCredential(OpenAiCredentialKind.SPONSORED_TRIAL, installId))
+    }
+
+    fun ensureSponsoredTrialInstallId(): OpenAiCredential {
+        loadCredential()
+            ?.takeIf { it.kind == OpenAiCredentialKind.SPONSORED_TRIAL }
+            ?.let { return it }
+
+        saveSponsoredTrialInstallId()
+        return loadCredential()
+            ?: error("Could not create Chuchotage translation access.")
     }
 
     fun saveOpenAiCredential(credential: OpenAiCredential) {

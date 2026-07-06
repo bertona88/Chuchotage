@@ -82,7 +82,7 @@
     <string name="permission_action_not_now">나중에</string>
     <string name="account_title">계정</string>
     <string name="account_api_key_signed_in">OpenAI API 키로 로그인했습니다.</string>
-    <string name="account_sponsored_trial_signed_in">스폰서 체험 번역 사용 중입니다.</string>
+    <string name="account_sponsored_trial_signed_in">Using Chuchotage translation access.</string>
     <string name="sign_out">로그아웃</string>
     <string name="codex_usage_checking">Codex 사용량 확인 중...</string>
     <string name="codex_usage_unavailable">사용량을 보려면 ChatGPT로 로그인하세요.</string>
@@ -103,8 +103,8 @@
     <string name="auth_button_use_api_key">OpenAI API 키 사용</string>
     <string name="auth_button_back_to_chatgpt">ChatGPT로 로그인</string>
     <string name="auth_cancel_sign_in">로그인 취소</string>
-    <string name="auth_sponsored_trial_title">Chuchotage 무료 체험</string>
-    <string name="auth_sponsored_trial_body">Chuchotage가 후원하는 10분입니다.</string>
+    <string name="auth_sponsored_trial_title">Start translating</string>
+    <string name="auth_sponsored_trial_body">Chuchotage creates translation access for you. No ChatGPT sign-in needed.</string>
     <string name="auth_api_key_title">OpenAI API 키 사용</string>
     <string name="auth_api_key_body">키는 이 기기에 저장되며 활성 번역 중에만 사용됩니다.</string>
     <string name="auth_input_api_key">API 키 붙여넣기</string>
@@ -113,7 +113,7 @@
     <string name="auth_error_invalid_openai_credential">유효한 OpenAI 인증 정보를 입력하세요.</string>
     <string name="auth_button_save_api_key">API 키 저장</string>
     <string name="auth_button_use_sponsored_trial">스폰서 체험 사용</string>
-    <string name="auth_button_try_free">Chuchotage 무료 체험</string>
+    <string name="auth_button_try_free">Start translating</string>
     <string name="auth_status_opening_browser">ChatGPT 로그인 열기 중...</string>
     <string name="auth_status_waiting_for_callback">ChatGPT 로그인 완료를 기다리는 중입니다...</string>
     <string name="auth_status_exchanging_token">ChatGPT 로그인 완료 중...</string>

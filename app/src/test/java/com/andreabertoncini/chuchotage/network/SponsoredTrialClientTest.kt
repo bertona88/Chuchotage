@@ -29,6 +29,7 @@ class SponsoredTrialClientTest {
             val body = JSONObject(request.body.readUtf8())
             assertEquals("trial-client-secret", token.value)
             assertFalse(token.shouldSendSessionUpdate)
+            assertEquals(OpenAiCredentialKind.SPONSORED_TRIAL, token.credentialKind)
             assertEquals("POST", request.method)
             assertEquals("123e4567-e89b-12d3-a456-426614174000", body.getString("installation_id"))
             assertEquals("ja", body.getString("target_language"))
@@ -58,12 +59,12 @@ class SponsoredTrialClientTest {
     }
 
     @Test
-    fun trialLimitUsesActionableErrorMessage() = runTest {
+    fun rateLimitUsesActionableErrorMessage() = runTest {
         MockWebServer().use { server ->
             server.enqueue(
                 MockResponse()
                     .setResponseCode(429)
-                    .setBody("""{"message":"Sponsored trial limit reached. Sign in with ChatGPT or use an API key to continue."}"""),
+                    .setBody("""{"message":"Chuchotage translation access is busy right now. Try again shortly."}"""),
             )
             server.start()
             val client = SponsoredTrialClient(
@@ -79,7 +80,7 @@ class SponsoredTrialClientTest {
             }.exceptionOrNull()
 
             assertTrue(exception is SponsoredTrialClient.SponsoredTrialException)
-            assertTrue(exception?.message.orEmpty().contains("Sponsored trial limit reached"))
+            assertTrue(exception?.message.orEmpty().contains("Chuchotage translation access is busy"))
         }
     }
 }

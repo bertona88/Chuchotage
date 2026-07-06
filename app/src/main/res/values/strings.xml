@@ -83,7 +83,7 @@
     <string name="permission_action_not_now">Not now</string>
     <string name="account_title">Account</string>
     <string name="account_api_key_signed_in">Signed in with OpenAI API key.</string>
-    <string name="account_sponsored_trial_signed_in">Using sponsored trial translation.</string>
+    <string name="account_sponsored_trial_signed_in">Using Chuchotage translation access.</string>
     <string name="sign_out">Sign out</string>
     <string name="codex_usage_checking">Checking Codex usage...</string>
     <string name="codex_usage_unavailable">Sign in with ChatGPT to show usage.</string>
@@ -104,8 +104,8 @@
     <string name="auth_button_use_api_key">Use an OpenAI API key</string>
     <string name="auth_button_back_to_chatgpt">Sign in with ChatGPT</string>
     <string name="auth_cancel_sign_in">Cancel sign-in</string>
-    <string name="auth_sponsored_trial_title">Try Chuchotage free</string>
-    <string name="auth_sponsored_trial_body">10 minutes sponsored by Chuchotage.</string>
+    <string name="auth_sponsored_trial_title">Start translating</string>
+    <string name="auth_sponsored_trial_body">Chuchotage creates translation access for you. No ChatGPT sign-in needed.</string>
     <string name="auth_api_key_title">Use an OpenAI API key</string>
     <string name="auth_api_key_body">Your key is stored on this device and used only during active translation.</string>
     <string name="auth_input_api_key">Paste API key</string>
@@ -114,7 +114,7 @@
     <string name="auth_error_invalid_openai_credential">Enter a valid OpenAI credential.</string>
     <string name="auth_button_save_api_key">Save API key</string>
     <string name="auth_button_use_sponsored_trial">Use sponsored trial</string>
-    <string name="auth_button_try_free">Try Chuchotage free</string>
+    <string name="auth_button_try_free">Start translating</string>
     <string name="auth_status_opening_browser">Opening ChatGPT sign-in...</string>
     <string name="auth_status_waiting_for_callback">Waiting for ChatGPT sign-in to finish...</string>
     <string name="auth_status_exchanging_token">Completing ChatGPT sign-in...</string>
@@ -128,7 +128,7 @@
     <string name="conversation_local_label">This side</string>
     <string name="conversation_partner_label">Other side</string>
     <string name="conversation_tap_to_speak">Tap your side when you speak</string>
-    <string name="conversation_speaking">Speaking into the mic</string>
+    <string name="conversation_speaking">Mic open on this side</string>
     <string name="conversation_reading">Translation arrives here</string>
     <string name="conversation_waiting">Translated text appears here.</string>
     <string name="conversation_choose_languages">Choose two different languages.</string>

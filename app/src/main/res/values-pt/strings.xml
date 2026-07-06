@@ -82,7 +82,7 @@
     <string name="permission_action_not_now">Agora não</string>
     <string name="account_title">Conta</string>
     <string name="account_api_key_signed_in">Sessão iniciada com chave de API da OpenAI.</string>
-    <string name="account_sponsored_trial_signed_in">Usando tradução de teste patrocinada.</string>
+    <string name="account_sponsored_trial_signed_in">Using Chuchotage translation access.</string>
     <string name="sign_out">Sair</string>
     <string name="codex_usage_checking">Verificando uso do Codex...</string>
     <string name="codex_usage_unavailable">Entre com ChatGPT para mostrar o uso.</string>
@@ -103,8 +103,8 @@
     <string name="auth_button_use_api_key">Usar uma chave de API da OpenAI</string>
     <string name="auth_button_back_to_chatgpt">Entrar com ChatGPT</string>
     <string name="auth_cancel_sign_in">Cancelar login</string>
-    <string name="auth_sponsored_trial_title">Experimente o Chuchotage grátis</string>
-    <string name="auth_sponsored_trial_body">10 minutos patrocinados pelo Chuchotage.</string>
+    <string name="auth_sponsored_trial_title">Start translating</string>
+    <string name="auth_sponsored_trial_body">Chuchotage creates translation access for you. No ChatGPT sign-in needed.</string>
     <string name="auth_api_key_title">Usar uma chave de API da OpenAI</string>
     <string name="auth_api_key_body">Sua chave é armazenada neste dispositivo e usada somente durante a tradução ativa.</string>
     <string name="auth_input_api_key">Cole a chave de API</string>
@@ -113,7 +113,7 @@
     <string name="auth_error_invalid_openai_credential">Insira uma credencial da OpenAI válida.</string>
     <string name="auth_button_save_api_key">Salvar chave de API</string>
     <string name="auth_button_use_sponsored_trial">Usar teste patrocinado</string>
-    <string name="auth_button_try_free">Experimentar Chuchotage grátis</string>
+    <string name="auth_button_try_free">Start translating</string>
     <string name="auth_status_opening_browser">Abrindo login do ChatGPT...</string>
     <string name="auth_status_waiting_for_callback">Aguardando a conclusão do login no ChatGPT...</string>
     <string name="auth_status_exchanging_token">Concluindo login do ChatGPT...</string>

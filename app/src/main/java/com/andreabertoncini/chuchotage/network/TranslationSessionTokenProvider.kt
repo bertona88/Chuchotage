@@ -24,6 +24,7 @@ class UserApiKeyProvider(
         return RealtimeTranslationSessionToken(
             value = credential.value,
             shouldSendSessionUpdate = true,
+            credentialKind = OpenAiCredentialKind.API_KEY,
         )
     }
 }
@@ -94,7 +95,10 @@ class TranslationAuthRepository(context: Context) {
     fun activeProvider(): TranslationSessionTokenProvider? {
         return when (credentialStore.loadCredential()?.kind) {
             OpenAiCredentialKind.API_KEY -> UserApiKeyProvider(credentialStore)
-            OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN -> ChatGptAuthProvider(credentialStore)
+            OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN -> {
+                credentialStore.ensureSponsoredTrialInstallId()
+                SponsoredTrialProvider(credentialStore)
+            }
             OpenAiCredentialKind.SPONSORED_TRIAL -> SponsoredTrialProvider(credentialStore)
             null -> null
         }

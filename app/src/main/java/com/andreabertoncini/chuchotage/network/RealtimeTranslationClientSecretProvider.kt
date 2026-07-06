@@ -16,6 +16,7 @@ import java.net.UnknownHostException
 data class RealtimeTranslationSessionToken(
     val value: String,
     val shouldSendSessionUpdate: Boolean,
+    val credentialKind: OpenAiCredentialKind,
 )
 
 class RealtimeTranslationClientSecretProvider(
@@ -34,6 +35,7 @@ class RealtimeTranslationClientSecretProvider(
             OpenAiCredentialKind.API_KEY -> RealtimeTranslationSessionToken(
                 value = credential.value,
                 shouldSendSessionUpdate = true,
+                credentialKind = OpenAiCredentialKind.API_KEY,
             )
             OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN -> {
                 val clientSecret = createClientSecretWithRefreshRetry(
@@ -45,6 +47,7 @@ class RealtimeTranslationClientSecretProvider(
                 RealtimeTranslationSessionToken(
                     value = clientSecret,
                     shouldSendSessionUpdate = false,
+                    credentialKind = OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN,
                 )
             }
             OpenAiCredentialKind.SPONSORED_TRIAL -> error(

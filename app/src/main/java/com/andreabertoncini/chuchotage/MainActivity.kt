@@ -208,7 +208,7 @@ private fun ChuchotageScreen(
     val chatGptOAuthClient = remember { ChatGptOAuthClient() }
     val codexUsageClient = remember { CodexUsageClient() }
     val scope = rememberCoroutineScope()
-    var credential by remember { mutableStateOf(credentialStore.loadCredential()) }
+    var credential by remember { mutableStateOf(credentialStore.loadCredentialReplacingLegacyClientCredential()) }
     var hasCredential by remember { mutableStateOf(credential != null) }
     var settings by remember { mutableStateOf(settingsStore.read()) }
     var codexUsageState by remember { mutableStateOf<CodexUsageUiState>(CodexUsageUiState.Unavailable) }
@@ -467,7 +467,7 @@ private fun ChuchotageScreen(
     }
 
     fun reloadCredentialState() {
-        credential = credentialStore.loadCredential()
+        credential = credentialStore.loadCredentialReplacingLegacyClientCredential()
         hasCredential = credential != null
     }
 
@@ -2577,12 +2577,12 @@ private fun AuthSetupScreen(
     onOpenPrivacyPolicy: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    var mode by rememberSaveable { mutableStateOf(AuthSetupMode.ChatGpt) }
+    var mode by rememberSaveable { mutableStateOf(AuthSetupMode.SponsoredTrial) }
     var apiKey by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var signInState by rememberSaveable { mutableStateOf(ChatGptSignInUiState.Idle) }
     var signInJob by remember { mutableStateOf<Job?>(null) }
-    val isChatGptMode = mode == AuthSetupMode.ChatGpt
+    val isChatGptMode = false
     val isApiKeyMode = mode == AuthSetupMode.ApiKey
     val isSponsoredTrialMode = mode == AuthSetupMode.SponsoredTrial
     val isSignInActive = signInState.isActive
@@ -2642,12 +2642,6 @@ private fun AuthSetupScreen(
         } catch (exception: IllegalStateException) {
             error = localizedAuthErrorMessage(exception, chatGptSignInFailedMessage)
         }
-    }
-
-    fun returnToChatGpt() {
-        cancelActiveSignIn()
-        mode = AuthSetupMode.ChatGpt
-        error = null
     }
 
     Column(
@@ -2896,59 +2890,24 @@ private fun AuthSetupScreen(
                 )
             }
         }
-        if (isChatGptMode) {
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    cancelActiveSignIn()
-                    mode = AuthSetupMode.SponsoredTrial
-                    error = null
+        Spacer(modifier = Modifier.height(10.dp))
+        TextButton(
+            onClick = {
+                cancelActiveSignIn()
+                mode = if (isApiKeyMode) AuthSetupMode.SponsoredTrial else AuthSetupMode.ApiKey
+                error = null
+            },
+            colors = ButtonDefaults.textButtonColors(contentColor = ChuchotageBrand.SignalBlueSoft),
+        ) {
+            Text(
+                text = if (isApiKeyMode) {
+                    stringResource(R.string.auth_button_use_sponsored_trial)
+                } else {
+                    stringResource(R.string.auth_button_use_api_key)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 520.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(25.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = ChuchotageBrand.Text,
-                    disabledContentColor = ChuchotageBrand.Muted,
-                ),
-                border = BorderStroke(1.dp, ChuchotageBrand.Ring),
-            ) {
-                Text(
-                    text = stringResource(R.string.auth_button_no_chatgpt),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        } else {
-            Spacer(modifier = Modifier.height(10.dp))
-            TextButton(
-                onClick = ::returnToChatGpt,
-                colors = ButtonDefaults.textButtonColors(contentColor = ChuchotageBrand.SignalBlueSoft),
-            ) {
-                Text(
-                    text = stringResource(R.string.auth_button_back_to_chatgpt),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            if (!isApiKeyMode) {
-                TextButton(
-                    onClick = {
-                        cancelActiveSignIn()
-                        mode = AuthSetupMode.ApiKey
-                        error = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = ChuchotageBrand.SignalBlueSoft),
-                ) {
-                    Text(
-                        text = stringResource(R.string.auth_button_use_api_key),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
         ExternalLinksRow(
@@ -3073,7 +3032,7 @@ private fun SignalWaveform(
     modifier: Modifier = Modifier,
 ) {
     val animatedVolume by animateFloatAsState(
-        targetValue = if (active) volume else 0.16f,
+        targetValue = if (active) volume else 0f,
         label = "signalWaveform",
     )
 
@@ -3082,19 +3041,30 @@ private fun SignalWaveform(
         val centerY = size.height * 0.5f
         val step = size.width / (barCount - 1)
         val strokeWidth = 3.dp.toPx()
+        val liveVolume = animatedVolume.coerceIn(0f, 1f)
 
         repeat(barCount) { index ->
             val distanceFromCenter = kotlin.math.abs(index - (barCount / 2f)) / (barCount / 2f)
             val accent = if (index % 7 == 0 || index % 11 == 0) 0.18f else 0f
-            val heightFraction = (
-                0.18f +
-                    ((1f - distanceFromCenter) * 0.58f) +
-                    accent +
-                    (animatedVolume * 0.32f)
-                ).coerceIn(0.14f, 0.95f)
+            val heightFraction = if (active) {
+                (
+                    0.06f +
+                        liveVolume * (
+                            0.16f +
+                                ((1f - distanceFromCenter) * 0.58f) +
+                                accent
+                            )
+                    ).coerceIn(0.06f, 0.95f)
+            } else {
+                0.06f
+            }
             val halfHeight = (size.height * heightFraction) * 0.5f
             val x = step * index
-            val alpha = (0.44f + ((1f - distanceFromCenter) * 0.4f)).coerceIn(0.36f, 1f)
+            val alpha = if (active) {
+                (0.3f + (liveVolume * 0.52f) + ((1f - distanceFromCenter) * 0.16f)).coerceIn(0.3f, 1f)
+            } else {
+                0.24f
+            }
 
             drawLine(
                 color = ChuchotageBrand.SignalBlue.copy(alpha = alpha),

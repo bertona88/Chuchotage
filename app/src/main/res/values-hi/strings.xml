@@ -82,7 +82,7 @@
     <string name="permission_action_not_now">अभी नहीं</string>
     <string name="account_title">खाता</string>
     <string name="account_api_key_signed_in">OpenAI API कुंजी से साइन इन है।</string>
-    <string name="account_sponsored_trial_signed_in">प्रायोजित ट्रायल अनुवाद उपयोग में है।</string>
+    <string name="account_sponsored_trial_signed_in">Using Chuchotage translation access.</string>
     <string name="sign_out">साइन आउट</string>
     <string name="codex_usage_checking">Codex उपयोग जांचा जा रहा है...</string>
     <string name="codex_usage_unavailable">उपयोग दिखाने के लिए ChatGPT से साइन इन करें।</string>
@@ -103,8 +103,8 @@
     <string name="auth_button_use_api_key">OpenAI API कुंजी उपयोग करें</string>
     <string name="auth_button_back_to_chatgpt">ChatGPT से साइन इन करें</string>
     <string name="auth_cancel_sign_in">साइन-इन रद्द करें</string>
-    <string name="auth_sponsored_trial_title">Chuchotage मुफ्त आजमाएं</string>
-    <string name="auth_sponsored_trial_body">Chuchotage द्वारा प्रायोजित 10 मिनट।</string>
+    <string name="auth_sponsored_trial_title">Start translating</string>
+    <string name="auth_sponsored_trial_body">Chuchotage creates translation access for you. No ChatGPT sign-in needed.</string>
     <string name="auth_api_key_title">OpenAI API कुंजी उपयोग करें</string>
     <string name="auth_api_key_body">आपकी कुंजी इस डिवाइस पर संग्रहीत है और केवल सक्रिय अनुवाद के दौरान उपयोग होती है।</string>
     <string name="auth_input_api_key">API कुंजी पेस्ट करें</string>
@@ -113,7 +113,7 @@
     <string name="auth_error_invalid_openai_credential">मान्य OpenAI क्रेडेंशियल दर्ज करें।</string>
     <string name="auth_button_save_api_key">API कुंजी सहेजें</string>
     <string name="auth_button_use_sponsored_trial">प्रायोजित ट्रायल उपयोग करें</string>
-    <string name="auth_button_try_free">Chuchotage मुफ्त आजमाएं</string>
+    <string name="auth_button_try_free">Start translating</string>
     <string name="auth_status_opening_browser">ChatGPT साइन-इन खोला जा रहा है...</string>
     <string name="auth_status_waiting_for_callback">ChatGPT साइन-इन पूरा होने की प्रतीक्षा है...</string>
     <string name="auth_status_exchanging_token">ChatGPT साइन-इन पूरा हो रहा है...</string>

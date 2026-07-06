@@ -82,7 +82,7 @@
     <string name="permission_action_not_now">Не сейчас</string>
     <string name="account_title">Аккаунт</string>
     <string name="account_api_key_signed_in">Вход выполнен с ключом API OpenAI.</string>
-    <string name="account_sponsored_trial_signed_in">Используется спонсорский пробный перевод.</string>
+    <string name="account_sponsored_trial_signed_in">Using Chuchotage translation access.</string>
     <string name="sign_out">Выйти</string>
     <string name="codex_usage_checking">Проверка использования Codex...</string>
     <string name="codex_usage_unavailable">Войдите через ChatGPT, чтобы показать использование.</string>
@@ -103,8 +103,8 @@
     <string name="auth_button_use_api_key">Использовать ключ API OpenAI</string>
     <string name="auth_button_back_to_chatgpt">Войти с ChatGPT</string>
     <string name="auth_cancel_sign_in">Отменить вход</string>
-    <string name="auth_sponsored_trial_title">Попробовать Chuchotage бесплатно</string>
-    <string name="auth_sponsored_trial_body">10 минут от Chuchotage.</string>
+    <string name="auth_sponsored_trial_title">Start translating</string>
+    <string name="auth_sponsored_trial_body">Chuchotage creates translation access for you. No ChatGPT sign-in needed.</string>
     <string name="auth_api_key_title">Использовать ключ API OpenAI</string>
     <string name="auth_api_key_body">Ключ хранится на этом устройстве и используется только во время активного перевода.</string>
     <string name="auth_input_api_key">Вставьте ключ API</string>
@@ -113,7 +113,7 @@
     <string name="auth_error_invalid_openai_credential">Введите действительные учетные данные OpenAI.</string>
     <string name="auth_button_save_api_key">Сохранить ключ API</string>
     <string name="auth_button_use_sponsored_trial">Использовать спонсорскую пробу</string>
-    <string name="auth_button_try_free">Попробовать Chuchotage бесплатно</string>
+    <string name="auth_button_try_free">Start translating</string>
     <string name="auth_status_opening_browser">Открытие входа через ChatGPT...</string>
     <string name="auth_status_waiting_for_callback">Ожидание завершения входа в ChatGPT...</string>
     <string name="auth_status_exchanging_token">Завершение входа через ChatGPT...</string>

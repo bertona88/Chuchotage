@@ -82,7 +82,7 @@
     <string name="permission_action_not_now">今はしない</string>
     <string name="account_title">アカウント</string>
     <string name="account_api_key_signed_in">OpenAI API キーでサインインしています。</string>
-    <string name="account_sponsored_trial_signed_in">スポンサー付きトライアル翻訳を使用中です。</string>
+    <string name="account_sponsored_trial_signed_in">Using Chuchotage translation access.</string>
     <string name="sign_out">サインアウト</string>
     <string name="codex_usage_checking">Codex の使用量を確認中...</string>
     <string name="codex_usage_unavailable">使用量を表示するには ChatGPT でサインインしてください。</string>
@@ -103,8 +103,8 @@
     <string name="auth_button_use_api_key">OpenAI APIキーを使う</string>
     <string name="auth_button_back_to_chatgpt">ChatGPTでサインイン</string>
     <string name="auth_cancel_sign_in">サインインをキャンセル</string>
-    <string name="auth_sponsored_trial_title">Chuchotageを無料で試す</string>
-    <string name="auth_sponsored_trial_body">Chuchotage提供の10分間です。</string>
+    <string name="auth_sponsored_trial_title">Start translating</string>
+    <string name="auth_sponsored_trial_body">Chuchotage creates translation access for you. No ChatGPT sign-in needed.</string>
     <string name="auth_api_key_title">OpenAI APIキーを使う</string>
     <string name="auth_api_key_body">キーはこのデバイスに保存され、翻訳中だけ使用されます。</string>
     <string name="auth_input_api_key">API キーを貼り付け</string>
@@ -113,7 +113,7 @@
     <string name="auth_error_invalid_openai_credential">有効な OpenAI 認証情報を入力してください。</string>
     <string name="auth_button_save_api_key">API キーを保存</string>
     <string name="auth_button_use_sponsored_trial">スポンサー付きトライアルを使う</string>
-    <string name="auth_button_try_free">Chuchotageを無料で試す</string>
+    <string name="auth_button_try_free">Start translating</string>
     <string name="auth_status_opening_browser">ChatGPT サインインを開いています...</string>
     <string name="auth_status_waiting_for_callback">ChatGPT サインインの完了を待っています...</string>
     <string name="auth_status_exchanging_token">ChatGPT サインインを完了しています...</string>

@@ -82,12 +82,11 @@ object PcmVolumeMeter {
         }
 
         val rms = sqrt(sumSquares / sampleCount)
-        return (sqrt(rms * RESPONSE_GAIN) + FLOOR_RESPONSE).toFloat().coerceIn(0f, 1f)
+        return sqrt(rms * RESPONSE_GAIN).toFloat().coerceIn(0f, 1f)
     }
 
     private const val BYTES_PER_SAMPLE = 2
     private const val RESPONSE_GAIN = 9.0
-    private const val FLOOR_RESPONSE = 0.04
 }
 
 object PcmInputGain {

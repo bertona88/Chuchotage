@@ -87,6 +87,7 @@ class RealtimeTranslationClientSecretProviderTest {
 
             assertEquals("refreshed-client-secret", token.value)
             assertEquals(false, token.shouldSendSessionUpdate)
+            assertEquals(OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN, token.credentialKind)
             val firstRequest = server.takeRequest()
             val secondRequest = server.takeRequest()
             assertEquals("Bearer old-access-token", firstRequest.getHeader("Authorization"))

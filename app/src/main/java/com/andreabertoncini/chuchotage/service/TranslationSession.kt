@@ -6,6 +6,7 @@ import com.andreabertoncini.chuchotage.audio.PcmAudioPlayer
 import com.andreabertoncini.chuchotage.audio.PcmAudioRecorder
 import com.andreabertoncini.chuchotage.audio.PcmVolumeMeter
 import com.andreabertoncini.chuchotage.network.OpenAiRequestHeaders
+import com.andreabertoncini.chuchotage.network.OpenAiCredentialKind
 import com.andreabertoncini.chuchotage.network.RealtimeTranslationEvent
 import com.andreabertoncini.chuchotage.network.RealtimeTranslationEventParser
 import com.andreabertoncini.chuchotage.network.RealtimeTranslationSessionToken
@@ -15,6 +16,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -25,6 +28,8 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -55,19 +60,7 @@ class TranslationSession(
 
         try {
             val bearerToken = bearerTokenProvider()
-            val opened = CompletableDeferred<Unit>()
-            val listener = createWebSocketListener(
-                opened = opened,
-                shouldSendSessionUpdate = bearerToken.shouldSendSessionUpdate,
-            )
-            val request = Request.Builder()
-                .url(TRANSLATION_WEBSOCKET_URL)
-                .addHeader("Authorization", "Bearer ${bearerToken.value}")
-                .addHeader("User-Agent", OpenAiRequestHeaders.userAgent)
-                .build()
-
-            webSocket = okHttpClient.newWebSocket(request, listener)
-            withTimeout(OPEN_TIMEOUT_MS) { opened.await() }
+            openWebSocketWithRetry(bearerToken)
 
             player.start()
             captureJob = scope.launch(Dispatchers.IO) {
@@ -93,6 +86,59 @@ class TranslationSession(
         }
     }
 
+    private suspend fun openWebSocketWithRetry(bearerToken: RealtimeTranslationSessionToken) {
+        repeat(OPEN_RETRY_DELAYS_MS.size + 1) { attempt ->
+            val opened = CompletableDeferred<Unit>()
+            val listener = createWebSocketListener(
+                opened = opened,
+                shouldSendSessionUpdate = bearerToken.shouldSendSessionUpdate,
+                credentialKind = bearerToken.credentialKind,
+            )
+            val request = Request.Builder()
+                .url(TRANSLATION_WEBSOCKET_URL)
+                .addHeader("Authorization", "Bearer ${bearerToken.value}")
+                .addHeader("User-Agent", OpenAiRequestHeaders.userAgent)
+                .build()
+            val socket = okHttpClient.newWebSocket(request, listener)
+            webSocket = socket
+
+            try {
+                withTimeout(OPEN_TIMEOUT_MS) { opened.await() }
+                return
+            } catch (error: Throwable) {
+                if (error is CancellationException && error !is TimeoutCancellationException) {
+                    throw error
+                }
+
+                socket.cancel()
+                if (webSocket == socket) {
+                    webSocket = null
+                }
+
+                val openFailure = when (error) {
+                    is RealtimeSocketOpenException -> error
+                    is TimeoutCancellationException -> RealtimeSocketOpenException(
+                        message = "Could not connect to OpenAI Realtime. Check the phone's network and try again.",
+                        retryable = false,
+                        cause = error,
+                    )
+                    else -> RealtimeSocketOpenException(
+                        message = realtimeSocketFailureMessage(
+                            throwable = error,
+                            credentialKind = bearerToken.credentialKind,
+                        ),
+                        retryable = isRetryableRealtimeSocketOpenFailure(error),
+                        cause = error,
+                    )
+                }
+                if (!openFailure.retryable || attempt == OPEN_RETRY_DELAYS_MS.size || !running.get()) {
+                    throw openFailure
+                }
+                delay(OPEN_RETRY_DELAYS_MS[attempt])
+            }
+        }
+    }
+
     fun stop() {
         if (!running.getAndSet(false)) {
             player.stop()
@@ -109,6 +155,7 @@ class TranslationSession(
     private fun createWebSocketListener(
         opened: CompletableDeferred<Unit>,
         shouldSendSessionUpdate: Boolean,
+        credentialKind: OpenAiCredentialKind,
     ): WebSocketListener {
         return object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -140,7 +187,13 @@ class TranslationSession(
                     }
                     is RealtimeTranslationEvent.Error -> {
                         if (!opened.isCompleted) {
-                            opened.completeExceptionally(IllegalStateException(event.message))
+                            opened.completeExceptionally(
+                                RealtimeSocketOpenException(
+                                    message = event.message,
+                                    retryable = false,
+                                ),
+                            )
+                            return
                         }
                         fail(event.message)
                     }
@@ -150,17 +203,33 @@ class TranslationSession(
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                val message = reason.ifBlank { "Realtime translation socket closed." }
+                if (!opened.isCompleted) {
+                    opened.completeExceptionally(
+                        RealtimeSocketOpenException(
+                            message = message,
+                            retryable = false,
+                        ),
+                    )
+                    return
+                }
                 if (running.get()) {
-                    fail(reason.ifBlank { "Realtime translation socket closed." })
+                    fail(message)
                 }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                val failure = RealtimeSocketOpenException(
+                    message = realtimeSocketFailureMessage(t, response?.code, credentialKind),
+                    retryable = isRetryableRealtimeSocketOpenFailure(t, response?.code),
+                    cause = t,
+                )
                 if (!opened.isCompleted) {
-                    opened.completeExceptionally(t)
+                    opened.completeExceptionally(failure)
+                    return
                 }
                 if (running.get()) {
-                    fail(t.message ?: "Realtime translation socket failed.")
+                    fail(failure.message ?: "Realtime translation socket failed.")
                 }
             }
         }
@@ -201,9 +270,56 @@ class TranslationSession(
         const val TRANSLATION_WEBSOCKET_URL =
             "wss://api.openai.com/v1/realtime/translations?model=gpt-realtime-translate"
         private const val OPEN_TIMEOUT_MS = 15_000L
+        private val OPEN_RETRY_DELAYS_MS = longArrayOf(300, 900)
         private const val NORMAL_CLOSE_STATUS = 1000
         private const val MAX_TRANSCRIPT_CHARS = 8_192
     }
+}
+
+private class RealtimeSocketOpenException(
+    override val message: String,
+    val retryable: Boolean,
+    cause: Throwable? = null,
+) : IOException(message, cause)
+
+internal fun realtimeSocketFailureMessage(
+    throwable: Throwable,
+    responseCode: Int? = null,
+    credentialKind: OpenAiCredentialKind? = null,
+): String {
+    return when {
+        responseCode == 401 || responseCode == 403 ->
+            "OpenAI rejected the saved login. Check your API key or sign in again."
+        responseCode == 429 ->
+            "OpenAI Realtime is rate-limited right now. Try again in a minute."
+        responseCode != null && responseCode in 500..599 -> when (credentialKind) {
+            OpenAiCredentialKind.CHATGPT_ACCESS_TOKEN ->
+                "OpenAI is rejecting ChatGPT sign-in translation sessions right now. Restart Chuchotage and try again."
+            OpenAiCredentialKind.SPONSORED_TRIAL ->
+                "Chuchotage translation access is unavailable right now. Try again in a moment."
+            OpenAiCredentialKind.API_KEY, null ->
+                "OpenAI Realtime is unavailable right now. Try again in a moment."
+        }
+        responseCode != null ->
+            "Could not connect to OpenAI Realtime (HTTP $responseCode)."
+        throwable is UnknownHostException ->
+            "Could not resolve api.openai.com. Check the phone's VPN, private DNS, or network and try again."
+        throwable is SocketTimeoutException ->
+            "Could not reach api.openai.com. Check the phone's network and try again."
+        throwable.message?.startsWith("Expected HTTP 101 response", ignoreCase = true) == true ->
+            "Could not connect to OpenAI Realtime. Try again in a moment."
+        else ->
+            throwable.message?.takeIf { it.isNotBlank() } ?: "Realtime translation socket failed."
+    }
+}
+
+private fun isRetryableRealtimeSocketOpenFailure(
+    throwable: Throwable,
+    responseCode: Int? = null,
+): Boolean {
+    return responseCode == 429 ||
+        (responseCode != null && responseCode in 500..599) ||
+        throwable is SocketTimeoutException
 }
 
 internal fun buildSessionUpdateEvent(

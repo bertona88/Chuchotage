@@ -82,7 +82,7 @@
     <string name="permission_action_not_now">暂不</string>
     <string name="account_title">账户</string>
     <string name="account_api_key_signed_in">已使用 OpenAI API 密钥登录。</string>
-    <string name="account_sponsored_trial_signed_in">正在使用赞助试用翻译。</string>
+    <string name="account_sponsored_trial_signed_in">Using Chuchotage translation access.</string>
     <string name="sign_out">退出登录</string>
     <string name="codex_usage_checking">正在检查 Codex 使用量...</string>
     <string name="codex_usage_unavailable">使用 ChatGPT 登录以显示使用量。</string>
@@ -103,8 +103,8 @@
     <string name="auth_button_use_api_key">使用 OpenAI API 密钥</string>
     <string name="auth_button_back_to_chatgpt">使用 ChatGPT 登录</string>
     <string name="auth_cancel_sign_in">取消登录</string>
-    <string name="auth_sponsored_trial_title">免费试用 Chuchotage</string>
-    <string name="auth_sponsored_trial_body">Chuchotage 赞助 10 分钟。</string>
+    <string name="auth_sponsored_trial_title">Start translating</string>
+    <string name="auth_sponsored_trial_body">Chuchotage creates translation access for you. No ChatGPT sign-in needed.</string>
     <string name="auth_api_key_title">使用 OpenAI API 密钥</string>
     <string name="auth_api_key_body">你的密钥会存储在此设备上，并且只在翻译进行时使用。</string>
     <string name="auth_input_api_key">粘贴 API 密钥</string>
@@ -113,7 +113,7 @@
     <string name="auth_error_invalid_openai_credential">请输入有效的 OpenAI 凭据。</string>
     <string name="auth_button_save_api_key">保存 API 密钥</string>
     <string name="auth_button_use_sponsored_trial">使用赞助试用</string>
-    <string name="auth_button_try_free">免费试用 Chuchotage</string>
+    <string name="auth_button_try_free">Start translating</string>
     <string name="auth_status_opening_browser">正在打开 ChatGPT 登录...</string>
     <string name="auth_status_waiting_for_callback">正在等待 ChatGPT 登录完成...</string>
     <string name="auth_status_exchanging_token">正在完成 ChatGPT 登录...</string>

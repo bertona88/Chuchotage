@@ -35,7 +35,7 @@ class PcmAudioCodecTest {
     fun measuresSilenceAsZeroVolume() {
         val level = PcmVolumeMeter.level(byteArrayOf(0x00, 0x00, 0x00, 0x00))
 
-        assertEquals(0.04f, level, 0.001f)
+        assertEquals(0f, level, 0.001f)
     }
 
     @Test
