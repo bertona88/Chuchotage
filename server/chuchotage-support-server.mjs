@@ -87,8 +87,8 @@ export function configFromEnv(env = process.env) {
       .filter(Boolean),
     maxBodyBytes: Number.parseInt(env.MAX_BODY_BYTES || "8192", 10),
     trialRateLimitWindowMs: Number.parseInt(env.TRIAL_RATE_LIMIT_WINDOW_MS || "3600000", 10),
-    trialIpRateLimitCount: Number.parseInt(env.TRIAL_IP_RATE_LIMIT_COUNT || "8", 10),
-    trialInstallRateLimitCount: Number.parseInt(env.TRIAL_INSTALL_RATE_LIMIT_COUNT || "6", 10),
+    trialIpRateLimitCount: Number.parseInt(env.TRIAL_IP_RATE_LIMIT_COUNT || "240", 10),
+    trialInstallRateLimitCount: Number.parseInt(env.TRIAL_INSTALL_RATE_LIMIT_COUNT || "120", 10),
     geoIpLookupCommand: env.GEOIP_LOOKUP_COMMAND || "geoiplookup",
     geoIpLookupTimeoutMs: Number.parseInt(env.GEOIP_LOOKUP_TIMEOUT_MS || "900", 10),
     geoCountryCodeResolver: null,
@@ -285,7 +285,7 @@ export function createChuchotageServer(config = configFromEnv()) {
       jsonResponse(res, 503, {
         ok: false,
         error: "service_unavailable",
-        message: "Sponsored trial is not available right now.",
+        message: "Chuchotage translation access is not available right now.",
       });
       return;
     }
@@ -316,7 +316,7 @@ export function createChuchotageServer(config = configFromEnv()) {
       jsonResponse(res, 429, {
         ok: false,
         error: "rate_limited",
-        message: "Sponsored trial limit reached. Sign in with ChatGPT or use an API key to continue.",
+        message: "Chuchotage translation access is busy right now. Try again shortly.",
       });
       return;
     }
@@ -332,7 +332,7 @@ export function createChuchotageServer(config = configFromEnv()) {
       jsonResponse(res, 502, {
         ok: false,
         error: "client_secret_failed",
-        message: "Could not start sponsored trial. Sign in with ChatGPT or use an API key to continue.",
+        message: "Could not start Chuchotage translation access. Try again shortly.",
       });
     }
   }
