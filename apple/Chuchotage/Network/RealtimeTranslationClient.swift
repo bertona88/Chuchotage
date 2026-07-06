@@ -20,6 +20,7 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
     private let webSocketURL: URL
     private let openTimeoutNanoseconds: UInt64
     private let closeTimeoutNanoseconds: UInt64
+    private let openRetryDelaysNanoseconds: [UInt64]
     private let webSocketOpenObserver: RealtimeWebSocketOpenObserver?
     private let logger = Logger(subsystem: "ai.chuchotage.apple", category: "realtime")
     private var socket: URLSessionWebSocketTask?
@@ -31,8 +32,12 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
     init(
         urlSession: URLSession? = nil,
         webSocketURL: URL = RealtimeTranslationClient.translationWebSocketURL,
-        openTimeoutNanoseconds: UInt64 = 5_000_000_000,
-        closeTimeoutNanoseconds: UInt64 = 2_000_000_000
+        openTimeoutNanoseconds: UInt64 = 10_000_000_000,
+        closeTimeoutNanoseconds: UInt64 = 2_000_000_000,
+        openRetryDelaysNanoseconds: [UInt64] = [
+            300_000_000,
+            900_000_000,
+        ]
     ) {
         if let urlSession {
             self.urlSession = urlSession
@@ -49,6 +54,7 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
         self.webSocketURL = webSocketURL
         self.openTimeoutNanoseconds = openTimeoutNanoseconds
         self.closeTimeoutNanoseconds = closeTimeoutNanoseconds
+        self.openRetryDelaysNanoseconds = openRetryDelaysNanoseconds
     }
 
     func connect(
@@ -58,14 +64,67 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
         disconnectInternal()
 
         let streamPair = AsyncStream.makeStream(of: RealtimeTranslationEvent.self)
-        eventContinuation = streamPair.continuation
+
+        do {
+            try await openConfiguredSocketWithRetry(
+                bearerToken: bearerToken,
+                targetLanguageCode: targetLanguageCode,
+                streamPair: streamPair
+            )
+        } catch {
+            streamPair.continuation.finish()
+            disconnectInternal()
+            throw error
+        }
+
+        return streamPair.stream
+    }
+
+    private func openConfiguredSocketWithRetry(
+        bearerToken: RealtimeTranslationSessionToken,
+        targetLanguageCode: String,
+        streamPair: (stream: AsyncStream<RealtimeTranslationEvent>, continuation: AsyncStream<RealtimeTranslationEvent>.Continuation)
+    ) async throws {
+        for attempt in 0...openRetryDelaysNanoseconds.count {
+            do {
+                try await openConfiguredSocket(
+                    bearerToken: bearerToken,
+                    targetLanguageCode: targetLanguageCode,
+                    streamPair: streamPair
+                )
+                return
+            } catch {
+                guard
+                    attempt < openRetryDelaysNanoseconds.count,
+                    RealtimeTranslationClientError.isRetryableOpenFailure(error)
+                else {
+                    throw error
+                }
+
+                logger.debug("Retrying Realtime translation socket open after failure: \(error.localizedDescription, privacy: .public)")
+                socket?.cancel(with: .goingAway, reason: nil)
+                socket = nil
+                try await Task.sleep(nanoseconds: openRetryDelaysNanoseconds[attempt])
+            }
+        }
+    }
+
+    private func openConfiguredSocket(
+        bearerToken: RealtimeTranslationSessionToken,
+        targetLanguageCode: String,
+        streamPair: (stream: AsyncStream<RealtimeTranslationEvent>, continuation: AsyncStream<RealtimeTranslationEvent>.Continuation)
+    ) async throws {
+        eventContinuation = nil
 
         var request = URLRequest(url: webSocketURL)
         request.setValue("Bearer \(bearerToken.value)", forHTTPHeaderField: "Authorization")
         request.setValue(OpenAIRequestHeaders.userAgent, forHTTPHeaderField: "User-Agent")
 
         let newSocket = urlSession.webSocketTask(with: request)
-        let openWaiter = webSocketOpenObserver?.makeOpenWaiter(for: newSocket)
+        let openWaiter = webSocketOpenObserver?.makeOpenWaiter(
+            for: newSocket,
+            credentialKind: bearerToken.credentialKind
+        )
         socket = newSocket
         logger.info("Opening Realtime translation socket")
         newSocket.resume()
@@ -104,11 +163,10 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
             throw TranslationRuntimeError.stopped
         }
 
+        eventContinuation = streamPair.continuation
         receiveTask = Task {
             await receiveLoop(socket: newSocket, continuation: streamPair.continuation)
         }
-
-        return streamPair.stream
     }
 
     func sendInputAudio(_ pcm16: Data) async throws {
@@ -271,14 +329,21 @@ actor RealtimeTranslationClient: RealtimeTranslationClienting {
 
 private final class RealtimeWebSocketOpenObserver: NSObject, URLSessionWebSocketDelegate, @unchecked Sendable {
     private let lock = NSLock()
-    private var openWaiters: [Int: OneShotVoidContinuation] = [:]
+    private var openWaiters: [Int: RealtimeWebSocketOpenWaiter] = [:]
 
-    func makeOpenWaiter(for task: URLSessionWebSocketTask) -> OneShotVoidContinuation {
-        let waiter = OneShotVoidContinuation()
+    func makeOpenWaiter(
+        for task: URLSessionWebSocketTask,
+        credentialKind: OpenAICredentialKind
+    ) -> OneShotVoidContinuation {
+        let continuation = OneShotVoidContinuation()
+        let waiter = RealtimeWebSocketOpenWaiter(
+            continuation: continuation,
+            credentialKind: credentialKind
+        )
         lock.withLock {
             openWaiters[task.taskIdentifier] = waiter
         }
-        return waiter
+        return continuation
     }
 
     func removeOpenWaiter(for task: URLSessionWebSocketTask) {
@@ -292,7 +357,7 @@ private final class RealtimeWebSocketOpenObserver: NSObject, URLSessionWebSocket
         webSocketTask: URLSessionWebSocketTask,
         didOpenWithProtocol protocol: String?
     ) {
-        openWaiter(for: webSocketTask)?.resume()
+        openWaiter(for: webSocketTask)?.continuation.resume()
     }
 
     func urlSession(
@@ -301,14 +366,33 @@ private final class RealtimeWebSocketOpenObserver: NSObject, URLSessionWebSocket
         didCloseWith closeCode: URLSessionWebSocketTask.CloseCode,
         reason: Data?
     ) {
-        openWaiter(for: webSocketTask)?.resume(
+        openWaiter(for: webSocketTask)?.continuation.resume(
             throwing: RealtimeTranslationClientError.closedBeforeOpen(
                 closeMessage(closeCode: closeCode, reason: reason)
             )
         )
     }
 
-    private func openWaiter(for task: URLSessionWebSocketTask) -> OneShotVoidContinuation? {
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didCompleteWithError error: (any Error)?
+    ) {
+        guard let webSocketTask = task as? URLSessionWebSocketTask else { return }
+        guard let waiter = openWaiter(for: webSocketTask) else { return }
+
+        if let error {
+            waiter.continuation.resume(
+                throwing: RealtimeTranslationClientError.openFailure(
+                    error: error,
+                    statusCode: (task.response as? HTTPURLResponse)?.statusCode,
+                    credentialKind: waiter.credentialKind
+                )
+            )
+        }
+    }
+
+    private func openWaiter(for task: URLSessionWebSocketTask) -> RealtimeWebSocketOpenWaiter? {
         lock.withLock {
             openWaiters[task.taskIdentifier]
         }
@@ -328,6 +412,11 @@ private final class RealtimeWebSocketOpenObserver: NSObject, URLSessionWebSocket
         }
         return reasonText
     }
+}
+
+private struct RealtimeWebSocketOpenWaiter {
+    let continuation: OneShotVoidContinuation
+    let credentialKind: OpenAICredentialKind
 }
 
 final class OneShotVoidContinuation: @unchecked Sendable {
@@ -407,13 +496,14 @@ enum RealtimeTranslationClientError: LocalizedError, Sendable {
     case openTimedOut
     case closeTimedOut
     case closedBeforeOpen(String)
+    case openFailed(String, retryable: Bool)
 
     var errorDescription: String? {
         switch self {
         case .openTimedOut:
             return L10n.string(
                 "error.realtimeSocketTimedOut",
-                defaultValue: "Realtime translation socket did not open in time. Check the network and try again."
+                defaultValue: "Could not connect to OpenAI Realtime. Check the network and try again."
             )
         case .closeTimedOut:
             return L10n.string(
@@ -427,6 +517,115 @@ enum RealtimeTranslationClientError: LocalizedError, Sendable {
                     defaultValue: "Realtime translation socket closed before opening."
                 )
                 : message
+        case .openFailed(let message, _):
+            return message
         }
+    }
+
+    var isRetryableOpenFailure: Bool {
+        switch self {
+        case .openTimedOut:
+            return true
+        case .openFailed(_, let retryable):
+            return retryable
+        case .closeTimedOut, .closedBeforeOpen:
+            return false
+        }
+    }
+
+    static func isRetryableOpenFailure(_ error: any Error) -> Bool {
+        if let error = error as? RealtimeTranslationClientError {
+            return error.isRetryableOpenFailure
+        }
+
+        if let error = error as? URLError {
+            switch error.code {
+            case .timedOut,
+                 .cannotConnectToHost,
+                 .networkConnectionLost,
+                 .notConnectedToInternet:
+                return true
+            default:
+                return false
+            }
+        }
+
+        return false
+    }
+
+    static func openFailure(
+        error: any Error,
+        statusCode: Int?,
+        credentialKind: OpenAICredentialKind?
+    ) -> RealtimeTranslationClientError {
+        let message: String
+        let retryable: Bool
+
+        switch statusCode {
+        case 401?, 403?:
+            message = L10n.string(
+                "error.realtimeSocketAuth",
+                defaultValue: "OpenAI rejected the saved login. Check your API key or sign in again."
+            )
+            retryable = false
+        case 429?:
+            message = L10n.string(
+                "error.realtimeSocketRateLimited",
+                defaultValue: "OpenAI Realtime is rate-limited right now. Try again in a minute."
+            )
+            retryable = true
+        case let statusCode? where (500...599).contains(statusCode):
+            switch credentialKind {
+            case .chatGPTAccessToken?:
+                message = L10n.string(
+                    "error.realtimeSocketChatGPTUnavailable",
+                    defaultValue: "OpenAI is rejecting ChatGPT sign-in translation sessions right now. Restart Chuchotage and try again."
+                )
+            case .sponsoredTrial?:
+                message = L10n.string(
+                    "error.realtimeSocketTrialUnavailable",
+                    defaultValue: "Chuchotage translation access is unavailable right now. Try again in a moment."
+                )
+            case .apiKey?, nil:
+                message = L10n.string(
+                    "error.realtimeSocketUnavailable",
+                    defaultValue: "OpenAI Realtime is unavailable right now. Try again in a moment."
+                )
+            }
+            retryable = true
+        case let statusCode?:
+            message = L10n.format(
+                "error.realtimeSocketHTTP",
+                defaultValue: "Could not connect to OpenAI Realtime (HTTP %d).",
+                statusCode
+            )
+            retryable = false
+        case nil:
+            if let urlError = error as? URLError {
+                switch urlError.code {
+                case .cannotFindHost, .dnsLookupFailed:
+                    message = L10n.string(
+                        "network.resolveOpenAI",
+                        defaultValue: "Could not resolve api.openai.com. Check VPN, DNS, or network settings and try again."
+                    )
+                default:
+                    message = L10n.string(
+                        "network.reachOpenAI",
+                        defaultValue: "Could not reach api.openai.com. Check the network and try again."
+                    )
+                }
+                retryable = isRetryableOpenFailure(urlError)
+            } else {
+                message = error.localizedDescription.isEmpty
+                    ? L10n.string(
+                        "error.realtimeSocketFailed",
+                        defaultValue: "Realtime translation socket failed."
+                    )
+                    : error.localizedDescription
+                retryable = false
+            }
+        }
+
+        return .openFailed(message, retryable: retryable)
     }
 }

@@ -60,6 +60,58 @@ final class RealtimeTranslationSharedTests: XCTestCase {
         }
     }
 
+    func testRealtimeSocketTimeoutMessageIsFriendlyAndRetryable() {
+        let error = RealtimeTranslationClientError.openTimedOut
+
+        XCTAssertEqual(
+            error.errorDescription,
+            "Could not connect to OpenAI Realtime. Check the network and try again."
+        )
+        XCTAssertTrue(error.isRetryableOpenFailure)
+    }
+
+    func testRealtimeSocketServerOpenFailureIsFriendlyAndRetryable() {
+        let error = RealtimeTranslationClientError.openFailure(
+            error: URLError(.badServerResponse),
+            statusCode: 500,
+            credentialKind: .apiKey
+        )
+
+        XCTAssertEqual(
+            error.errorDescription,
+            "OpenAI Realtime is unavailable right now. Try again in a moment."
+        )
+        XCTAssertTrue(error.isRetryableOpenFailure)
+    }
+
+    func testRealtimeSocketAuthOpenFailureIsActionableAndNotRetryable() {
+        let error = RealtimeTranslationClientError.openFailure(
+            error: URLError(.userAuthenticationRequired),
+            statusCode: 401,
+            credentialKind: .chatGPTAccessToken
+        )
+
+        XCTAssertEqual(
+            error.errorDescription,
+            "OpenAI rejected the saved login. Check your API key or sign in again."
+        )
+        XCTAssertFalse(error.isRetryableOpenFailure)
+    }
+
+    func testRealtimeSocketChatGPTServerOpenFailureNamesRestartWorkaround() {
+        let error = RealtimeTranslationClientError.openFailure(
+            error: URLError(.badServerResponse),
+            statusCode: 500,
+            credentialKind: .chatGPTAccessToken
+        )
+
+        XCTAssertEqual(
+            error.errorDescription,
+            "OpenAI is rejecting ChatGPT sign-in translation sessions right now. Restart Chuchotage and try again."
+        )
+        XCTAssertTrue(error.isRetryableOpenFailure)
+    }
+
     func testBuildsInputAudioAppendEvent() throws {
         let json = try RealtimeTranslationRequestBuilder.inputAudioAppendEvent(Data([0x00, 0x01]))
         let payload = try parseJsonObject(json)
@@ -147,6 +199,19 @@ final class RealtimeTranslationSharedTests: XCTestCase {
             toSampleRate: 24_000
         )
         XCTAssertEqual(downsampled, Data([0x01, 0x00]))
+    }
+
+    func testPcmVolumeMeterMeasuresSilenceAsZero() {
+        let level = PcmVolumeMeter.level(Data([0x00, 0x00, 0x00, 0x00]))
+
+        XCTAssertEqual(level, 0, accuracy: 0.001)
+    }
+
+    func testPcmVolumeMeterMeasuresLouderAudioHigher() {
+        let quiet = PcmVolumeMeter.level(Data([0x00, 0x04, 0x00, 0x04]))
+        let loud = PcmVolumeMeter.level(Data([0x00, 0x40, 0x00, 0x40]))
+
+        XCTAssertGreaterThan(loud, quiet)
     }
 
     func testInputGainLeavesSilenceUnchanged() {

@@ -3,6 +3,7 @@ import Foundation
 struct RealtimeTranslationSessionToken: Equatable, Sendable {
     let value: String
     let shouldSendSessionUpdate: Bool
+    let credentialKind: OpenAICredentialKind
 }
 
 enum OpenAIRequestHeaders {

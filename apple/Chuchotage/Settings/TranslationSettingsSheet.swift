@@ -83,27 +83,15 @@ struct TranslationSettingsSheet: View {
                     } else {
                         Text(
                             l10n: "credential.notSignedIn.detail",
-                            defaultValue: "Not signed in. Sign in with ChatGPT, continue with sponsored trial, or use an API key."
+                            defaultValue: "Not signed in. Start with Chuchotage translation access."
                         )
                             .foregroundStyle(.secondary)
                     }
 
-                    if viewModel.canImportCodexCredential {
-                        Button(L10n.string("credential.useCodexLogin", defaultValue: "Use Codex login")) {
-                            viewModel.importCodexCredential()
-                        }
-                        .disabled(viewModel.isCredentialBusy)
-                    }
-
-                    Button(L10n.string("credential.signInChatGPT", defaultValue: "Sign in with ChatGPT")) {
-                        viewModel.signInWithChatGPT()
-                    }
-                    .disabled(viewModel.isCredentialBusy)
-
                     Button(
                         L10n.string(
-                            "credential.noChatGPTSponsoredTrial",
-                            defaultValue: "I don't have ChatGPT (sponsored trial)"
+                            "credential.continueSponsoredTrial",
+                            defaultValue: "Start translating"
                         )
                     ) {
                         viewModel.useSponsoredTrialCredential()
@@ -575,40 +563,16 @@ private struct MacOSSettingsView: View {
             }
 
             HStack(spacing: 10) {
-                if viewModel.canImportCodexCredential {
-                    Button {
-                        viewModel.importCodexCredential()
-                    } label: {
-                        Label(
-                            L10n.string("credential.useCodexLogin", defaultValue: "Use Codex login"),
-                            systemImage: "person.crop.circle.badge.checkmark"
-                        )
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(viewModel.isCredentialBusy)
-                }
-
-                Button {
-                    viewModel.signInWithChatGPT()
-                } label: {
-                    Label(
-                        L10n.string("credential.signInChatGPT", defaultValue: "Sign in with ChatGPT"),
-                        systemImage: "person.crop.circle.badge.checkmark"
-                    )
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(ChuchotageColor.signalBlue)
-                .disabled(viewModel.isCredentialBusy)
-
                 Button {
                     viewModel.useSponsoredTrialCredential()
                 } label: {
                     Label(
-                        L10n.string("credential.noChatGPT", defaultValue: "I don't have ChatGPT"),
-                        systemImage: "gift.fill"
+                        L10n.string("credential.continueSponsoredTrial", defaultValue: "Start translating"),
+                        systemImage: "waveform"
                     )
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
+                .tint(ChuchotageColor.signalBlue)
                 .disabled(viewModel.isCredentialBusy)
 
                 if viewModel.hasCredential {
@@ -680,17 +644,17 @@ private struct MacOSSettingsView: View {
         if viewModel.isCredentialBusy {
             return L10n.string(
                 "credential.updateInProgress.detail",
-                defaultValue: "Waiting for the browser sign-in, Codex import, or Keychain update to finish."
+                defaultValue: "Preparing Chuchotage translation access on this device."
             )
         }
         return viewModel.hasCredential
             ? L10n.string(
                 "credential.available.detail",
-                defaultValue: "Chuchotage can create a short-lived Realtime Translation session for this Mac."
+                defaultValue: "Chuchotage can create Realtime Translation access for this device."
             )
             : L10n.string(
                 "credential.missing.detail",
-                defaultValue: "Sign in with ChatGPT, continue with sponsored trial, use your Codex login, or add an API key from the first-run screen."
+                defaultValue: "Start with Chuchotage translation access. No ChatGPT sign-in needed."
             )
     }
 }

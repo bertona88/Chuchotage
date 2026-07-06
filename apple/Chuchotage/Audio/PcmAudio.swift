@@ -46,11 +46,10 @@ enum PcmVolumeMeter {
         }
 
         let rms = sqrt(sumSquares / Double(sampleCount))
-        return min(1, max(0, sqrt(rms * responseGain) + floorResponse))
+        return min(1, max(0, sqrt(rms * responseGain)))
     }
 
     private static let responseGain = 9.0
-    private static let floorResponse = 0.04
 }
 
 enum PcmInputGain {

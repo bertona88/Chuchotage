@@ -50,7 +50,7 @@ actor TranslationRuntime {
         eventContinuation.yield(.statusChanged(.connecting))
 
         do {
-            guard let credential = try await credentialStore.loadCredential() else {
+            guard let credential = try await credentialStore.loadCredentialReplacingLegacyClientCredential() else {
                 logger.error("Translation start failed: missing credential")
                 throw TranslationRuntimeError.missingCredential
             }

@@ -96,6 +96,33 @@ extension OpenAICredentialStoring {
         }
         return .available(kind: credential.kind)
     }
+
+    func loadCredentialReplacingLegacyClientCredential() async throws -> OpenAICredential? {
+        guard let credential = try await loadCredential() else {
+            return nil
+        }
+        guard credential.kind == .chatGPTAccessToken else {
+            return credential
+        }
+
+        let includedAccessCredential = OpenAICredential(
+            kind: .sponsoredTrial,
+            value: UUID().uuidString.lowercased()
+        )
+        try await saveCredential(includedAccessCredential)
+        return includedAccessCredential
+    }
+
+    func loadCredentialStatusReplacingLegacyClientCredential() async throws -> OpenAICredentialStatus {
+        let status = try await loadCredentialStatus()
+        guard status.kind == .chatGPTAccessToken else {
+            return status
+        }
+
+        return try await loadCredentialReplacingLegacyClientCredential()
+            .map { .available(kind: $0.kind) }
+            ?? .missing
+    }
 }
 
 struct EmptyOpenAICredentialStore: OpenAICredentialStoring {

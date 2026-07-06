@@ -39,6 +39,7 @@ final class SponsoredTrialClientTests: XCTestCase {
 
         XCTAssertEqual(token.value, "trial-client-secret")
         XCTAssertFalse(token.shouldSendSessionUpdate)
+        XCTAssertEqual(token.credentialKind, .sponsoredTrial)
         XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(
             request.value(forHTTPHeaderField: "Content-Type"),
@@ -81,7 +82,7 @@ final class SponsoredTrialClientTests: XCTestCase {
         XCTAssertEqual(body["source_transcript_enabled"] as? Bool, true)
     }
 
-    func testTrialLimitUsesActionableErrorMessage() async throws {
+    func testRateLimitUsesActionableErrorMessage() async throws {
         let (session, cleanupSession) = makeStubSession()
         defer { cleanupSession() }
 
@@ -94,7 +95,7 @@ final class SponsoredTrialClientTests: XCTestCase {
             )!
             return (
                 response,
-                Data(#"{"message":"Sponsored trial limit reached. Sign in with ChatGPT or use an API key to continue."}"#.utf8)
+                Data(#"{"message":"Chuchotage translation access is busy right now. Try again shortly."}"#.utf8)
             )
         }
 
@@ -113,7 +114,7 @@ final class SponsoredTrialClientTests: XCTestCase {
         } catch let error as SponsoredTrialClientError {
             switch error {
             case .requestFailed(let message):
-                XCTAssertTrue(message.contains("Sponsored trial limit reached"))
+                XCTAssertTrue(message.contains("Chuchotage translation access is busy"))
             case .network:
                 XCTFail("Expected requestFailed error for 429 response.")
             }
@@ -186,6 +187,7 @@ final class SponsoredTrialClientTests: XCTestCase {
 
         XCTAssertEqual(token.value, "trial-client-secret-provider")
         XCTAssertFalse(token.shouldSendSessionUpdate)
+        XCTAssertEqual(token.credentialKind, .sponsoredTrial)
         XCTAssertEqual(body["target_language"] as? String, "it")
         XCTAssertEqual(body["source_transcript_enabled"] as? Bool, true)
     }

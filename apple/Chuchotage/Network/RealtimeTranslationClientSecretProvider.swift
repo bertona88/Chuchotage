@@ -34,7 +34,8 @@ final class RealtimeTranslationClientSecretProvider: @unchecked Sendable {
         case .apiKey:
             return RealtimeTranslationSessionToken(
                 value: credential.value,
-                shouldSendSessionUpdate: true
+                shouldSendSessionUpdate: true,
+                credentialKind: .apiKey
             )
 
         case .chatGPTAccessToken:
@@ -45,7 +46,8 @@ final class RealtimeTranslationClientSecretProvider: @unchecked Sendable {
             )
             return RealtimeTranslationSessionToken(
                 value: clientSecret,
-                shouldSendSessionUpdate: false
+                shouldSendSessionUpdate: false,
+                credentialKind: .chatGPTAccessToken
             )
 
         case .sponsoredTrial:

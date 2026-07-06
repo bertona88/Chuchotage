@@ -249,7 +249,7 @@ final class TranslationViewModel: ObservableObject {
         case .chatGPTAccessToken:
             return L10n.string("credential.mode.chatGPT", defaultValue: "ChatGPT sign-in")
         case .sponsoredTrial:
-            return L10n.string("credential.mode.sponsoredTrial", defaultValue: "Sponsored free trial")
+            return L10n.string("credential.mode.sponsoredTrial", defaultValue: "Chuchotage access")
         }
     }
 
@@ -454,7 +454,7 @@ final class TranslationViewModel: ObservableObject {
         let generation = credentialRefreshGeneration
         Task {
             do {
-                let status = try await credentialStore.loadCredentialStatus()
+                let status = try await credentialStore.loadCredentialStatusReplacingLegacyClientCredential()
                 guard generation == credentialRefreshGeneration else { return }
                 hasCredential = status.hasCredential
                 credentialKind = status.kind
@@ -476,7 +476,7 @@ final class TranslationViewModel: ObservableObject {
     }
 
     private func sponsoredTrialInstallIDForSaving() async throws -> String {
-        if let existing = try await credentialStore.loadCredential(),
+        if let existing = try await credentialStore.loadCredentialReplacingLegacyClientCredential(),
            existing.kind == .sponsoredTrial,
            OpenAICredentialValidator.isPlausibleSponsoredTrialInstallID(existing.value) {
             return existing.value

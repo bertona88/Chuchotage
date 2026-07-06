@@ -33,7 +33,8 @@ final class SponsoredTrialClient: @unchecked Sendable {
 
         return RealtimeTranslationSessionToken(
             value: clientSecret,
-            shouldSendSessionUpdate: false
+            shouldSendSessionUpdate: false,
+            credentialKind: .sponsoredTrial
         )
     }
 
@@ -79,7 +80,7 @@ final class SponsoredTrialClient: @unchecked Sendable {
                 case 429:
                     throw SponsoredTrialClientError.requestFailed(
                         message(from: payload)
-                            ?? "Sponsored trial limit reached. Sign in with ChatGPT or use an API key to continue."
+                            ?? "Chuchotage translation access is busy right now. Try again shortly."
                     )
 
                 case 403:
@@ -90,7 +91,7 @@ final class SponsoredTrialClient: @unchecked Sendable {
 
                 case 503:
                     throw SponsoredTrialClientError.requestFailed(
-                        "Sponsored trial is not available right now. Sign in with ChatGPT or use an API key to continue."
+                        "Chuchotage translation access is not available right now. Try again shortly."
                     )
 
                 case 500...599:
@@ -99,7 +100,7 @@ final class SponsoredTrialClient: @unchecked Sendable {
                         continue
                     }
                     throw SponsoredTrialClientError.requestFailed(
-                        "Could not start sponsored trial. Check the phone's network and try again."
+                        "Could not start Chuchotage translation access. Check the network and try again."
                     )
 
                 default:
@@ -119,7 +120,7 @@ final class SponsoredTrialClient: @unchecked Sendable {
             }
         }
 
-        throw SponsoredTrialClientError.requestFailed("Sponsored trial request failed.")
+        throw SponsoredTrialClientError.requestFailed("Chuchotage translation access request failed.")
     }
 
     private func parseJsonObject(_ data: Data) -> [String: Any]? {
@@ -136,7 +137,7 @@ final class SponsoredTrialClient: @unchecked Sendable {
     private func errorMessage(from payload: [String: Any]?, fallbackText: String) -> String {
         message(from: payload)
             ?? (payload?["error"] as? String)
-            ?? (fallbackText.isEmpty ? "Sponsored trial request failed." : fallbackText)
+            ?? (fallbackText.isEmpty ? "Chuchotage translation access request failed." : fallbackText)
     }
 
     private func isRetryableNetworkError(_ error: URLError) -> Bool {

@@ -758,7 +758,7 @@ private struct IOSConversationTranscriptPanel: View {
 
     private var statusText: String {
         if active {
-            return L10n.string("conversation.speaking", defaultValue: "Speaking into the mic")
+            return L10n.string("conversation.speaking", defaultValue: "Mic open on this side")
         }
         if receiving {
             return L10n.string("conversation.reading", defaultValue: "Translation arrives here")
@@ -1063,24 +1063,21 @@ private extension String {
 private struct CredentialSetupPanel: View {
     @ObservedObject var viewModel: TranslationViewModel
     let isCompact: Bool
-    @State private var apiKey = ""
-    @State private var isShowingFallbackOptions = false
-    @State private var isShowingApiKeyInput = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: panelSpacing) {
-            Text(l10n: "credential.setup.title", defaultValue: "Sign in to start translating")
+            Text(l10n: "credential.setup.title", defaultValue: "Start translating")
                 .font(.system(.headline, design: .rounded, weight: .semibold))
                 .foregroundStyle(ChuchotageColor.text)
 
             Button {
-                viewModel.signInWithChatGPT()
+                viewModel.useSponsoredTrialCredential()
             } label: {
                 Label(
                     viewModel.isCredentialBusy
-                        ? L10n.string("credential.signingIn", defaultValue: "Signing in")
-                        : L10n.string("credential.signInChatGPT", defaultValue: "Sign in with ChatGPT"),
-                    systemImage: "person.crop.circle.badge.checkmark"
+                        ? L10n.string("credential.saving", defaultValue: "Preparing")
+                        : L10n.string("credential.continueSponsoredTrial", defaultValue: "Start translating"),
+                    systemImage: "waveform"
                 )
                     .frame(maxWidth: .infinity)
             }
@@ -1088,119 +1085,15 @@ private struct CredentialSetupPanel: View {
             .tint(ChuchotageColor.signalBlue)
             .disabled(viewModel.isCredentialBusy)
 
-            #if os(iOS)
-            VStack(spacing: 2) {
-                Text(l10n: "credential.chatGPTFreeAccountHint", defaultValue: "Free ChatGPT accounts work too.")
-                Text(l10n: "credential.chatGPTChatsPrivateHint", defaultValue: "Nope, we can't see your ChatGPT chats.")
-            }
+            Text(
+                l10n: "credential.fallback.description",
+                defaultValue: "Chuchotage creates translation access for you. No ChatGPT sign-in needed."
+            )
             .font(.system(.caption, design: .rounded, weight: .medium))
             .foregroundStyle(ChuchotageColor.muted)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
             .fixedSize(horizontal: false, vertical: true)
-            #endif
-
-            Button {
-                withAnimation(.easeInOut(duration: 0.16)) {
-                    isShowingFallbackOptions.toggle()
-                }
-            } label: {
-                Label(
-                    L10n.string("credential.noChatGPT", defaultValue: "I don't have ChatGPT"),
-                    systemImage: "sparkles.rectangle.stack.fill"
-                )
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .tint(ChuchotageColor.signalBlueSoft)
-            .disabled(viewModel.isCredentialBusy)
-
-            if isShowingFallbackOptions {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(l10n: "credential.fallback.description", defaultValue: "Try the sponsored trial or add an API key.")
-                        .font(.system(.caption, design: .rounded, weight: .medium))
-                        .foregroundStyle(ChuchotageColor.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Button {
-                        viewModel.useSponsoredTrialCredential()
-                    } label: {
-                        Label(
-                            L10n.string(
-                                "credential.continueSponsoredTrial",
-                                defaultValue: "Continue with sponsored free trial"
-                            ),
-                            systemImage: "gift.fill"
-                        )
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(ChuchotageColor.signalBlueSoft)
-                    .disabled(viewModel.isCredentialBusy)
-
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.16)) {
-                            isShowingApiKeyInput.toggle()
-                        }
-                    } label: {
-                        Label(
-                            L10n.string("credential.useAPIKey", defaultValue: "Use an OpenAI API key"),
-                            systemImage: "key.fill"
-                        )
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(ChuchotageColor.signalBlueSoft)
-                    .disabled(viewModel.isCredentialBusy)
-
-                    if isShowingApiKeyInput {
-                        VStack(alignment: .leading, spacing: 8) {
-                            SecureField(
-                                L10n.string("credential.apiKeyPlaceholder", defaultValue: "OpenAI API key"),
-                                text: $apiKey
-                            )
-                                .textFieldStyle(.roundedBorder)
-                                #if os(iOS)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                #endif
-
-                            Button {
-                                viewModel.saveApiKeyCredential(apiKey)
-                            } label: {
-                                Label(
-                                    viewModel.isCredentialBusy
-                                        ? L10n.string("credential.saving", defaultValue: "Saving")
-                                        : L10n.string("credential.saveAPIKey", defaultValue: "Save API key"),
-                                    systemImage: "key.fill"
-                                )
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(ChuchotageColor.signalBlueSoft)
-                            .disabled(viewModel.isCredentialBusy)
-                        }
-                    }
-
-                    if viewModel.canImportCodexCredential {
-                        Button {
-                            viewModel.importCodexCredential()
-                        } label: {
-                            Label(
-                                L10n.string("credential.useCodexLogin", defaultValue: "Use Codex login"),
-                                systemImage: "person.crop.circle.badge.checkmark"
-                            )
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(ChuchotageColor.signalBlueSoft)
-                        .disabled(viewModel.isCredentialBusy)
-                    }
-                }
-                .padding(12)
-                .background(ChuchotageColor.surface.opacity(0.65))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
 
             if viewModel.hasCredential {
                 HStack(spacing: 8) {

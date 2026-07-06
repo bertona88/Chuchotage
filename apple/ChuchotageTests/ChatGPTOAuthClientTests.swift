@@ -233,6 +233,7 @@ final class ChatGPTOAuthClientTests: XCTestCase {
         )
         XCTAssertEqual(apiKeyToken.value, "sk-test-12345678901234567890")
         XCTAssertTrue(apiKeyToken.shouldSendSessionUpdate)
+        XCTAssertEqual(apiKeyToken.credentialKind, .apiKey)
 
         let chatGPTToken = try await provider.sessionBearerToken(
             for: OpenAICredential(
@@ -249,6 +250,7 @@ final class ChatGPTOAuthClientTests: XCTestCase {
 
         XCTAssertEqual(chatGPTToken.value, "chatgpt-client-secret")
         XCTAssertFalse(chatGPTToken.shouldSendSessionUpdate)
+        XCTAssertEqual(chatGPTToken.credentialKind, .chatGPTAccessToken)
         XCTAssertEqual(request.value(forHTTPHeaderField: "User-Agent"), OpenAIRequestHeaders.userAgent)
         XCTAssertEqual(output["language"] as? String, "en")
     }
@@ -307,6 +309,7 @@ final class ChatGPTOAuthClientTests: XCTestCase {
         XCTAssertEqual(refreshCallCount, 1)
         XCTAssertEqual(token.value, "fresh-client-secret")
         XCTAssertFalse(token.shouldSendSessionUpdate)
+        XCTAssertEqual(token.credentialKind, .chatGPTAccessToken)
         XCTAssertEqual(authorizationHeaders, [
             "Bearer old-access-token",
             "Bearer refreshed-access-token",

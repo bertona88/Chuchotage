@@ -53,7 +53,7 @@ final class TranslationViewModelTests: XCTestCase {
         let storedCredential = try await credentialStore.loadCredential()
         XCTAssertEqual(storedCredential?.kind, .sponsoredTrial)
         XCTAssertEqual(storedCredential?.value, existingInstallID)
-        XCTAssertEqual(viewModel.credentialModeTitle, "Sponsored free trial")
+        XCTAssertEqual(viewModel.credentialModeTitle, "Chuchotage access")
     }
 
     func testLiveAudioRouteChangesAreForwardedToRuntime() async throws {
