@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const docsRoot = join(root, "docs");
-const version = "20260527a";
+const version = "20260528b";
 const site = "https://www.chuchotage.ai";
 const lastmod = "2026-05-27";
 const appStoreUrl = "https://apps.apple.com/it/app/chuchotage/id6770434335";
@@ -68,7 +68,7 @@ const commonPlatforms = [
   },
   {
     name: "Windows",
-    body: "The Windows companion captures selected Windows playback audio and plays translated audio to a selected output device. A public Windows download is not posted yet.",
+    body: "The Windows companion captures selected Windows playback audio and plays translated audio to a selected output device. A preview Windows zip is available on the download page.",
   },
 ];
 
@@ -117,7 +117,7 @@ const pages = [
       "Needs an internet connection during translation.",
       "Live translation can be wrong, delayed, or incomplete.",
       "iOS/iPadOS same-device app audio, including Zoom audio, is not current behavior.",
-      "A public Windows download is not posted yet.",
+      "The Windows build is a preview zip, not a Microsoft Store-signed installer yet.",
     ],
   },
   {
@@ -154,7 +154,7 @@ const pages = [
       },
       {
         name: "Windows meetings",
-        body: "The companion captures selected Windows playback audio for webinars, browsers, and meeting apps. Public Windows download is not posted yet.",
+        body: "The companion captures selected Windows playback audio for webinars, browsers, and meeting apps. A preview Windows zip is available on the download page.",
       },
     ],
     sources: [
@@ -179,7 +179,7 @@ const pages = [
       "No meeting bot, meeting invite, cloud recording, or transcript archive.",
       "iPhone and iPad do not currently translate same-device Zoom audio.",
       "Android only captures app audio that Android and the source app allow.",
-      "A public Windows download is not posted yet.",
+      "The Windows build is a preview zip, not a Microsoft Store-signed installer yet.",
     ],
   },
   {
@@ -261,7 +261,7 @@ const pages = [
       },
       {
         name: "Windows",
-        body: "The Windows companion has a playback-audio route, but public Windows download is not posted yet.",
+        body: "The Windows companion has a playback-audio route, and a preview Windows zip is available on the download page.",
       },
     ],
     sources: [
@@ -299,7 +299,7 @@ const pages = [
     proof: [
       ["Use case", "A webinar, browser video, Teams-style call, or training audio playing on a Windows PC."],
       ["Architecture", "Electron UI with a .NET bridge for WASAPI loopback capture, Realtime Translation, and selected playback output."],
-      ["Status", "Implemented as a Windows companion in the repo; public Windows download is not posted yet."],
+      ["Status", "Preview Windows zip is available on the download page; it is not Microsoft Store-signed yet."],
     ],
     whatTitle: "What it does",
     whatBody: [
@@ -415,7 +415,7 @@ const pages = [
       "Chuchotage is not offline and does not process translation entirely on iPhone.",
       "iOS/iPadOS same-device app audio is not shipped yet.",
       "Live translation can be inaccurate; important information should be checked.",
-      "A public Windows download is not posted yet.",
+      "The public Windows download is a preview zip, not a polished Microsoft Store installer yet.",
     ],
   },
   {

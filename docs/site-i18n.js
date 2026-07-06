@@ -2171,14 +2171,17 @@
     </svg>`;
   }
 
+  const WINDOWS_PREVIEW_URL = "/download/windows/Chuchotage-0.1.0-Windows-preview.zip";
+  const WINDOWS_PREVIEW_CHECKSUM_URL = `${WINDOWS_PREVIEW_URL}.sha256`;
+
   const DOWNLOAD_PAGES = {
     en: {
       nav: "Download",
-      homeAvailability: "Available now for iPhone, iPad, Android, and Mac. Windows is coming soon.",
+      homeAvailability: "Available now for iPhone, iPad, Android, Mac, and a Windows preview.",
       homeCtaTitle: "Choose your device and get Chuchotage.",
       meta: {
         title: "Get Chuchotage | Download the Live Translation App",
-        description: "Get Chuchotage for iPhone, iPad, Android, and Mac, and see what is coming next.",
+        description: "Get Chuchotage for iPhone, iPad, Android, Mac, and the Windows preview.",
         ogTitle: "Get Chuchotage",
         ogDescription: "Choose your device and install Chuchotage for quiet live translation.",
       },
@@ -2187,7 +2190,7 @@
         title: "Get Chuchotage",
         lede: "Choose your device and install the quiet live translation app.",
         primary: "Open App Store",
-        secondary: "Mac download",
+        secondary: "Desktop downloads",
       },
       platforms: {
         eyebrow: "Devices",
@@ -2195,10 +2198,11 @@
         iosBody: "Install Chuchotage from the App Store.",
         androidBody: "Install Chuchotage from Google Play.",
         macBody: "Download Chuchotage for Mac.",
-        windowsBody: "The Windows download is coming soon.",
+        windowsBody: "Download the Windows preview zip for testing on Windows 10/11. It is not Microsoft Store-signed yet.",
         store: "Open App Store",
         play: "Open Google Play",
         macAction: "Download for Mac",
+        windowsAction: "Download Windows preview",
         soon: "Coming soon",
       },
       qr: {
@@ -2210,9 +2214,11 @@
       },
       direct: {
         eyebrow: "Desktop",
-        title: "Download the Mac app. Windows is next.",
+        title: "Download desktop builds.",
         macStatus: "Ready to download",
-        windowsStatus: "Coming soon",
+        windowsStatus: "Preview zip",
+        checksumName: "Windows preview checksum",
+        checksumStatus: "Verify zip",
       },
       notes: {
         eyebrow: "Before you start",
@@ -2220,64 +2226,65 @@
         items: [
           "Use ChatGPT sign-in where supported, a trial when available, or your own OpenAI key.",
           "Headphones help keep translated audio private and reduce feedback into the microphone.",
+          "Windows preview is a zip: unzip it, open Chuchotage.exe, and expect SmartScreen or company security prompts because it is not Store-signed yet.",
           "Chuchotage has no ads, no tracking, and no saved transcript history.",
         ],
       },
     },
     es: {
       nav: "Descargar",
-      homeAvailability: "Disponible para iPhone, iPad, Android y Mac. Windows llegará pronto.",
+      homeAvailability: "Disponible para iPhone, iPad, Android, Mac y una preview de Windows.",
       homeCtaTitle: "Elige tu dispositivo y obtén Chuchotage.",
-      meta: { title: "Obtén Chuchotage | Descarga la app de traducción en vivo", description: "Obtén Chuchotage para iPhone, iPad, Android y Mac, y mira qué llega después.", ogTitle: "Obtén Chuchotage", ogDescription: "Elige tu dispositivo e instala Chuchotage para traducción en vivo discreta." },
-      hero: { eyebrow: "Descargar", title: "Obtén Chuchotage", lede: "Elige tu dispositivo e instala la app discreta de traducción en vivo.", primary: "Abrir App Store", secondary: "Descargar para Mac" },
-      platforms: { eyebrow: "Dispositivos", title: "Empieza con la versión para lo que usas.", iosBody: "Instala Chuchotage desde App Store.", androidBody: "Instala Chuchotage desde Google Play.", macBody: "Descarga Chuchotage para Mac.", windowsBody: "La descarga para Windows llegará pronto.", store: "Abrir App Store", play: "Abrir Google Play", macAction: "Descargar para Mac", soon: "Próximamente" },
+      meta: { title: "Obtén Chuchotage | Descarga la app de traducción en vivo", description: "Obtén Chuchotage para iPhone, iPad, Android, Mac y la preview de Windows.", ogTitle: "Obtén Chuchotage", ogDescription: "Elige tu dispositivo e instala Chuchotage para traducción en vivo discreta." },
+      hero: { eyebrow: "Descargar", title: "Obtén Chuchotage", lede: "Elige tu dispositivo e instala la app discreta de traducción en vivo.", primary: "Abrir App Store", secondary: "Descargas de escritorio" },
+      platforms: { eyebrow: "Dispositivos", title: "Empieza con la versión para lo que usas.", iosBody: "Instala Chuchotage desde App Store.", androidBody: "Instala Chuchotage desde Google Play.", macBody: "Descarga Chuchotage para Mac.", windowsBody: "Descarga la preview de Windows en zip para probarla en Windows 10/11. Todavía no está firmada por Microsoft Store.", store: "Abrir App Store", play: "Abrir Google Play", macAction: "Descargar para Mac", windowsAction: "Descargar preview de Windows", soon: "Próximamente" },
       qr: { eyebrow: "Escanea para instalar", title: "Escanea. Ve a la tienda correcta.", body: "Apunta tu teléfono al código para abrir Chuchotage en App Store o Google Play.", action: "Abrir en este dispositivo", alt: "Código QR para descargar Chuchotage" },
-      direct: { eyebrow: "Escritorio", title: "Descarga la app para Mac. Windows es lo siguiente.", macStatus: "Lista para descargar", windowsStatus: "Próximamente" },
-      notes: { eyebrow: "Antes de empezar", title: "Inicia sesión y usa auriculares.", items: ["Usa inicio de sesión con ChatGPT donde esté disponible, una prueba cuando exista, o tu propia clave de OpenAI.", "Los auriculares mantienen la traducción más privada y reducen el retorno al micrófono.", "Chuchotage no tiene anuncios, seguimiento ni historial de transcripciones guardado."] },
+      direct: { eyebrow: "Escritorio", title: "Descarga las builds de escritorio.", macStatus: "Lista para descargar", windowsStatus: "Zip preview", checksumName: "Checksum de preview Windows", checksumStatus: "Verificar zip" },
+      notes: { eyebrow: "Antes de empezar", title: "Inicia sesión y usa auriculares.", items: ["Usa inicio de sesión con ChatGPT donde esté disponible, una prueba cuando exista, o tu propia clave de OpenAI.", "Los auriculares mantienen la traducción más privada y reducen el retorno al micrófono.", "La preview de Windows es un zip: descomprímelo, abre Chuchotage.exe y espera avisos de SmartScreen o seguridad de empresa porque todavía no está firmada por Store.", "Chuchotage no tiene anuncios, seguimiento ni historial de transcripciones guardado."] },
     },
     it: {
       nav: "Download",
-      homeAvailability: "Disponibile per iPhone, iPad, Android e Mac. Windows arriverà presto.",
+      homeAvailability: "Disponibile per iPhone, iPad, Android, Mac e una preview Windows.",
       homeCtaTitle: "Scegli il tuo dispositivo e ottieni Chuchotage.",
-      meta: { title: "Ottieni Chuchotage | Scarica l'app di traduzione live", description: "Ottieni Chuchotage per iPhone, iPad, Android e Mac, e scopri cosa arriverà dopo.", ogTitle: "Ottieni Chuchotage", ogDescription: "Scegli il tuo dispositivo e installa Chuchotage per una traduzione live discreta." },
-      hero: { eyebrow: "Download", title: "Ottieni Chuchotage", lede: "Scegli il tuo dispositivo e installa l'app discreta per la traduzione live.", primary: "Apri App Store", secondary: "Download per Mac" },
-      platforms: { eyebrow: "Dispositivi", title: "Inizia dalla versione adatta a ciò che usi.", iosBody: "Installa Chuchotage da App Store.", androidBody: "Installa Chuchotage da Google Play.", macBody: "Scarica Chuchotage per Mac.", windowsBody: "Il download per Windows arriverà presto.", store: "Apri App Store", play: "Apri Google Play", macAction: "Download per Mac", soon: "In arrivo" },
+      meta: { title: "Ottieni Chuchotage | Scarica l'app di traduzione live", description: "Ottieni Chuchotage per iPhone, iPad, Android, Mac e la preview Windows.", ogTitle: "Ottieni Chuchotage", ogDescription: "Scegli il tuo dispositivo e installa Chuchotage per una traduzione live discreta." },
+      hero: { eyebrow: "Download", title: "Ottieni Chuchotage", lede: "Scegli il tuo dispositivo e installa l'app discreta per la traduzione live.", primary: "Apri App Store", secondary: "Download desktop" },
+      platforms: { eyebrow: "Dispositivi", title: "Inizia dalla versione adatta a ciò che usi.", iosBody: "Installa Chuchotage da App Store.", androidBody: "Installa Chuchotage da Google Play.", macBody: "Scarica Chuchotage per Mac.", windowsBody: "Scarica lo zip della preview Windows per test su Windows 10/11. Non è ancora firmata da Microsoft Store.", store: "Apri App Store", play: "Apri Google Play", macAction: "Download per Mac", windowsAction: "Download preview Windows", soon: "In arrivo" },
       qr: { eyebrow: "Scansiona per installare", title: "Scansiona. Vai allo store giusto.", body: "Punta il telefono sul codice per aprire Chuchotage su App Store o Google Play.", action: "Apri su questo dispositivo", alt: "Codice QR per scaricare Chuchotage" },
-      direct: { eyebrow: "Desktop", title: "Scarica l'app per Mac. Windows è il prossimo.", macStatus: "Pronto da scaricare", windowsStatus: "In arrivo" },
-      notes: { eyebrow: "Prima di iniziare", title: "Accedi, poi usa le cuffie.", items: ["Usa l'accesso ChatGPT dove supportato, una prova quando disponibile, o la tua chiave OpenAI.", "Le cuffie aiutano a tenere la traduzione più privata e riducono il rientro nel microfono.", "Chuchotage non ha annunci, tracciamento o cronologia delle trascrizioni salvata."] },
+      direct: { eyebrow: "Desktop", title: "Scarica le build desktop.", macStatus: "Pronto da scaricare", windowsStatus: "Zip preview", checksumName: "Checksum preview Windows", checksumStatus: "Verifica zip" },
+      notes: { eyebrow: "Prima di iniziare", title: "Accedi, poi usa le cuffie.", items: ["Usa l'accesso ChatGPT dove supportato, una prova quando disponibile, o la tua chiave OpenAI.", "Le cuffie aiutano a tenere la traduzione più privata e riducono il rientro nel microfono.", "La preview Windows è uno zip: decomprimilo, apri Chuchotage.exe e aspettati avvisi SmartScreen o di sicurezza aziendale perché non è ancora firmata dallo Store.", "Chuchotage non ha annunci, tracciamento o cronologia delle trascrizioni salvata."] },
     },
     fr: {
       nav: "Télécharger",
-      homeAvailability: "Disponible pour iPhone, iPad, Android et Mac. Windows arrive bientôt.",
+      homeAvailability: "Disponible pour iPhone, iPad, Android, Mac et une preview Windows.",
       homeCtaTitle: "Choisissez votre appareil et obtenez Chuchotage.",
-      meta: { title: "Obtenir Chuchotage | Télécharger l'app de traduction en direct", description: "Obtenez Chuchotage pour iPhone, iPad, Android et Mac, et voyez ce qui arrive ensuite.", ogTitle: "Obtenir Chuchotage", ogDescription: "Choisissez votre appareil et installez Chuchotage pour une traduction en direct discrète." },
-      hero: { eyebrow: "Télécharger", title: "Obtenir Chuchotage", lede: "Choisissez votre appareil et installez l'app discrète de traduction en direct.", primary: "Ouvrir l'App Store", secondary: "Télécharger pour Mac" },
-      platforms: { eyebrow: "Appareils", title: "Commencez avec la version adaptée à ce que vous utilisez.", iosBody: "Installez Chuchotage depuis l'App Store.", androidBody: "Installez Chuchotage depuis Google Play.", macBody: "Téléchargez Chuchotage pour Mac.", windowsBody: "Le téléchargement Windows arrive bientôt.", store: "Ouvrir l'App Store", play: "Ouvrir Google Play", macAction: "Télécharger pour Mac", soon: "Bientôt" },
+      meta: { title: "Obtenir Chuchotage | Télécharger l'app de traduction en direct", description: "Obtenez Chuchotage pour iPhone, iPad, Android, Mac et la preview Windows.", ogTitle: "Obtenir Chuchotage", ogDescription: "Choisissez votre appareil et installez Chuchotage pour une traduction en direct discrète." },
+      hero: { eyebrow: "Télécharger", title: "Obtenir Chuchotage", lede: "Choisissez votre appareil et installez l'app discrète de traduction en direct.", primary: "Ouvrir l'App Store", secondary: "Téléchargements ordinateur" },
+      platforms: { eyebrow: "Appareils", title: "Commencez avec la version adaptée à ce que vous utilisez.", iosBody: "Installez Chuchotage depuis l'App Store.", androidBody: "Installez Chuchotage depuis Google Play.", macBody: "Téléchargez Chuchotage pour Mac.", windowsBody: "Téléchargez le zip de preview Windows pour tester sur Windows 10/11. Il n'est pas encore signé par le Microsoft Store.", store: "Ouvrir l'App Store", play: "Ouvrir Google Play", macAction: "Télécharger pour Mac", windowsAction: "Télécharger la preview Windows", soon: "Bientôt" },
       qr: { eyebrow: "Scanner pour installer", title: "Scannez. Ouvrez la bonne boutique.", body: "Pointez votre téléphone vers le code pour ouvrir Chuchotage dans l'App Store ou Google Play.", action: "Ouvrir sur cet appareil", alt: "Code QR pour télécharger Chuchotage" },
-      direct: { eyebrow: "Ordinateur", title: "Téléchargez l'app Mac. Windows arrive ensuite.", macStatus: "Prêt à télécharger", windowsStatus: "Bientôt" },
-      notes: { eyebrow: "Avant de commencer", title: "Connectez-vous, puis portez un casque.", items: ["Utilisez la connexion ChatGPT quand elle est disponible, un essai si proposé, ou votre propre clé OpenAI.", "Le casque garde la traduction plus privée et réduit le retour dans le micro.", "Chuchotage n'a pas de publicité, pas de suivi et pas d'historique de transcription enregistré."] },
+      direct: { eyebrow: "Ordinateur", title: "Téléchargez les builds ordinateur.", macStatus: "Prêt à télécharger", windowsStatus: "Zip preview", checksumName: "Checksum preview Windows", checksumStatus: "Vérifier le zip" },
+      notes: { eyebrow: "Avant de commencer", title: "Connectez-vous, puis portez un casque.", items: ["Utilisez la connexion ChatGPT quand elle est disponible, un essai si proposé, ou votre propre clé OpenAI.", "Le casque garde la traduction plus privée et réduit le retour dans le micro.", "La preview Windows est un zip : décompressez-le, ouvrez Chuchotage.exe et attendez-vous à des alertes SmartScreen ou de sécurité d'entreprise car elle n'est pas encore signée par le Store.", "Chuchotage n'a pas de publicité, pas de suivi et pas d'historique de transcription enregistré."] },
     },
     de: {
       nav: "Download",
-      homeAvailability: "Verfügbar für iPhone, iPad, Android und Mac. Windows kommt bald.",
+      homeAvailability: "Verfügbar für iPhone, iPad, Android, Mac und eine Windows-Preview.",
       homeCtaTitle: "Wähle dein Gerät und hol dir Chuchotage.",
-      meta: { title: "Chuchotage holen | Live-Übersetzungs-App herunterladen", description: "Hol dir Chuchotage für iPhone, iPad, Android und Mac und sieh, was als Nächstes kommt.", ogTitle: "Chuchotage holen", ogDescription: "Wähle dein Gerät und installiere Chuchotage für ruhige Live-Übersetzung." },
-      hero: { eyebrow: "Download", title: "Chuchotage holen", lede: "Wähle dein Gerät und installiere die ruhige App für Live-Übersetzung.", primary: "App Store öffnen", secondary: "Mac-Download" },
-      platforms: { eyebrow: "Geräte", title: "Starte mit der Version für das, was du nutzt.", iosBody: "Installiere Chuchotage aus dem App Store.", androidBody: "Installiere Chuchotage aus Google Play.", macBody: "Lade Chuchotage für Mac herunter.", windowsBody: "Der Windows-Download kommt bald.", store: "App Store öffnen", play: "Google Play öffnen", macAction: "Für Mac herunterladen", soon: "Demnächst" },
+      meta: { title: "Chuchotage holen | Live-Übersetzungs-App herunterladen", description: "Hol dir Chuchotage für iPhone, iPad, Android, Mac und die Windows-Preview.", ogTitle: "Chuchotage holen", ogDescription: "Wähle dein Gerät und installiere Chuchotage für ruhige Live-Übersetzung." },
+      hero: { eyebrow: "Download", title: "Chuchotage holen", lede: "Wähle dein Gerät und installiere die ruhige App für Live-Übersetzung.", primary: "App Store öffnen", secondary: "Desktop-Downloads" },
+      platforms: { eyebrow: "Geräte", title: "Starte mit der Version für das, was du nutzt.", iosBody: "Installiere Chuchotage aus dem App Store.", androidBody: "Installiere Chuchotage aus Google Play.", macBody: "Lade Chuchotage für Mac herunter.", windowsBody: "Lade die Windows-Preview als Zip zum Testen auf Windows 10/11 herunter. Sie ist noch nicht vom Microsoft Store signiert.", store: "App Store öffnen", play: "Google Play öffnen", macAction: "Für Mac herunterladen", windowsAction: "Windows-Preview laden", soon: "Demnächst" },
       qr: { eyebrow: "Scannen zum Installieren", title: "Scannen. Den passenden Store öffnen.", body: "Richte dein Telefon auf den Code, um Chuchotage im App Store oder bei Google Play zu öffnen.", action: "Auf diesem Gerät öffnen", alt: "QR-Code zum Herunterladen von Chuchotage" },
-      direct: { eyebrow: "Desktop", title: "Lade die Mac-App herunter. Windows kommt als Nächstes.", macStatus: "Bereit zum Download", windowsStatus: "Demnächst" },
-      notes: { eyebrow: "Vor dem Start", title: "Melde dich an und trage Kopfhörer.", items: ["Nutze ChatGPT-Anmeldung, wo unterstützt, einen Test, wenn verfügbar, oder deinen eigenen OpenAI-Schlüssel.", "Kopfhörer halten die Übersetzung privater und reduzieren Rückkopplung ins Mikrofon.", "Chuchotage hat keine Werbung, kein Tracking und keinen gespeicherten Transkriptverlauf."] },
+      direct: { eyebrow: "Desktop", title: "Lade die Desktop-Builds herunter.", macStatus: "Bereit zum Download", windowsStatus: "Preview-Zip", checksumName: "Windows-Preview-Prüfsumme", checksumStatus: "Zip prüfen" },
+      notes: { eyebrow: "Vor dem Start", title: "Melde dich an und trage Kopfhörer.", items: ["Nutze ChatGPT-Anmeldung, wo unterstützt, einen Test, wenn verfügbar, oder deinen eigenen OpenAI-Schlüssel.", "Kopfhörer halten die Übersetzung privater und reduzieren Rückkopplung ins Mikrofon.", "Die Windows-Preview ist eine Zip-Datei: Entpacke sie, öffne Chuchotage.exe und rechne mit SmartScreen- oder Firmensicherheitswarnungen, weil sie noch nicht Store-signiert ist.", "Chuchotage hat keine Werbung, kein Tracking und keinen gespeicherten Transkriptverlauf."] },
     },
     pt: {
       nav: "Download",
-      homeAvailability: "Disponível para iPhone, iPad, Android e Mac. Windows chega em breve.",
+      homeAvailability: "Disponível para iPhone, iPad, Android, Mac e uma prévia para Windows.",
       homeCtaTitle: "Escolha seu dispositivo e obtenha Chuchotage.",
-      meta: { title: "Obter Chuchotage | Baixar o app de tradução ao vivo", description: "Obtenha Chuchotage para iPhone, iPad, Android e Mac e veja o que vem depois.", ogTitle: "Obter Chuchotage", ogDescription: "Escolha seu dispositivo e instale Chuchotage para tradução ao vivo discreta." },
-      hero: { eyebrow: "Download", title: "Obter Chuchotage", lede: "Escolha seu dispositivo e instale o app discreto de tradução ao vivo.", primary: "Abrir App Store", secondary: "Download para Mac" },
-      platforms: { eyebrow: "Dispositivos", title: "Comece pela versão para o que você usa.", iosBody: "Instale Chuchotage pela App Store.", androidBody: "Instale Chuchotage pelo Google Play.", macBody: "Baixe Chuchotage para Mac.", windowsBody: "O download para Windows chega em breve.", store: "Abrir App Store", play: "Abrir Google Play", macAction: "Baixar para Mac", soon: "Em breve" },
+      meta: { title: "Obter Chuchotage | Baixar o app de tradução ao vivo", description: "Obtenha Chuchotage para iPhone, iPad, Android, Mac e a prévia para Windows.", ogTitle: "Obter Chuchotage", ogDescription: "Escolha seu dispositivo e instale Chuchotage para tradução ao vivo discreta." },
+      hero: { eyebrow: "Download", title: "Obter Chuchotage", lede: "Escolha seu dispositivo e instale o app discreto de tradução ao vivo.", primary: "Abrir App Store", secondary: "Downloads desktop" },
+      platforms: { eyebrow: "Dispositivos", title: "Comece pela versão para o que você usa.", iosBody: "Instale Chuchotage pela App Store.", androidBody: "Instale Chuchotage pelo Google Play.", macBody: "Baixe Chuchotage para Mac.", windowsBody: "Baixe o zip da prévia para Windows para testar no Windows 10/11. Ainda não está assinado pela Microsoft Store.", store: "Abrir App Store", play: "Abrir Google Play", macAction: "Baixar para Mac", windowsAction: "Baixar prévia Windows", soon: "Em breve" },
       qr: { eyebrow: "Escaneie para instalar", title: "Escaneie. Abra a loja certa.", body: "Aponte seu telefone para o código para abrir o Chuchotage na App Store ou no Google Play.", action: "Abrir neste dispositivo", alt: "Código QR para baixar o Chuchotage" },
-      direct: { eyebrow: "Desktop", title: "Baixe o app para Mac. Windows vem depois.", macStatus: "Pronto para baixar", windowsStatus: "Em breve" },
-      notes: { eyebrow: "Antes de começar", title: "Faça login e use fones.", items: ["Use login com ChatGPT onde houver suporte, um teste quando disponível, ou sua própria chave OpenAI.", "Fones ajudam a manter a tradução mais privada e reduzem retorno no microfone.", "Chuchotage não tem anúncios, rastreamento nem histórico de transcrições salvo."] },
+      direct: { eyebrow: "Desktop", title: "Baixe as builds desktop.", macStatus: "Pronto para baixar", windowsStatus: "Zip preview", checksumName: "Checksum da prévia Windows", checksumStatus: "Verificar zip" },
+      notes: { eyebrow: "Antes de começar", title: "Faça login e use fones.", items: ["Use login com ChatGPT onde houver suporte, um teste quando disponível, ou sua própria chave OpenAI.", "Fones ajudam a manter a tradução mais privada e reduzem retorno no microfone.", "A prévia para Windows é um zip: descompacte, abra Chuchotage.exe e espere avisos do SmartScreen ou da segurança da empresa porque ainda não está assinada pela Store.", "Chuchotage não tem anúncios, rastreamento nem histórico de transcrições salvo."] },
     },
   };
 
@@ -2515,13 +2522,13 @@
               </div>
               <a class="store-link" href="/download/macos/Chuchotage-0.1.1-macOS.dmg">${escapeHtml(download.platforms.macAction)}</a>
             </section>
-            <section class="platform-row">
+            <section class="platform-row platform-row-live">
               <div>
                 <p class="platform-kicker">Windows</p>
                 <h3>Windows app</h3>
                 <p>${escapeHtml(download.platforms.windowsBody)}</p>
               </div>
-              <span class="store-link store-link-disabled">${escapeHtml(download.platforms.soon)}</span>
+              <a class="store-link" href="${WINDOWS_PREVIEW_URL}">${escapeHtml(download.platforms.windowsAction || download.platforms.soon)}</a>
             </section>
           </div>
         </div>
@@ -2539,11 +2546,16 @@
               <span>Chuchotage for Mac</span>
               <span>${escapeHtml(download.direct.macStatus)}</span>
             </a>
-            <div class="download-row download-row-disabled">
+            <a class="download-row" href="${WINDOWS_PREVIEW_URL}">
               <span>Windows</span>
               <span>Chuchotage for Windows</span>
               <span>${escapeHtml(download.direct.windowsStatus)}</span>
-            </div>
+            </a>
+            <a class="download-row" href="${WINDOWS_PREVIEW_CHECKSUM_URL}">
+              <span>SHA-256</span>
+              <span>${escapeHtml(download.direct.checksumName || "Windows preview checksum")}</span>
+              <span>${escapeHtml(download.direct.checksumStatus || "Verify zip")}</span>
+            </a>
           </div>
         </div>
       </section>
